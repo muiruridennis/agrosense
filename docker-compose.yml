@@ -1,0 +1,136 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5 
+    container_name: agrosense-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./server/docker.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d agrosense-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: agrosense-pgadmin
+    ports:
+      - "8080:80"
+    env_file:
+      - ./server/docker.env
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - appnet
+  redis:
+    image: redis:7-alpine
+    container_name: agrosense-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data                        # persist queue jobs across restarts
+    networks:
+      - appnet
+    healthcheck:                                # ← added
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: agrosense-server
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgres://admin:admin@postgres:5432/agrosense-db
+      REDIS_HOST: redis        # service name — not localhost
+      REDIS_PORT: 6379
+    develop:
+      watch:
+        - path: ./server
+          target: /app
+          action: sync
+          ignore:
+            - node_modules/
+            - .git/
+            - dist/
+            - test/
+            - coverage/
+            - "*.log"
+            - .env*
+        - path: ./server/package.json
+          action: rebuild
+        - path: ./server/package-lock.json
+          action: rebuild
+        - path: ./server/tsconfig.json
+          action: rebuild
+        - path: ./server/nest-cli.json
+          action: rebuild
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:                   # ← wait for Redis healthcheck to pass
+        condition: service_healthy
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: agrosense-client
+    env_file:
+      - ./client/.env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      NODE_ENV: development
+    develop:
+      # we specify the files to watch for changes
+      watch:
+        # it'll watch for changes in package.json and package-lock.json and rebuild the container if there are any changes
+        - path: ./client/package.json
+          action: rebuild
+        - path: ./client/package-lock.json
+          action: rebuild
+        # it'll watch for changes in the client directory and sync the changes with the container real time
+        - path: ./client
+          target: /app
+          action: sync
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_data:
+    driver: local

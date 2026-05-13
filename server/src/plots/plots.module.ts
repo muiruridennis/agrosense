@@ -1,0 +1,16 @@
+import { forwardRef, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PlotsController } from './plots.controller';
+import { PlotsService } from './plots.service';
+import { Plot } from './entities/plot.entity';
+import { FarmsModule } from '../farms/farms.module';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Plot]), 
+  forwardRef(() => FarmsModule),
+],
+  controllers: [PlotsController],
+  providers: [PlotsService],
+  exports: [PlotsService],
+})
+export class PlotsModule {}

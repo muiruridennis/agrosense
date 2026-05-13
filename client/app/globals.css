@@ -1,0 +1,441 @@
+/* ───────────────────────────────────────────────────────────────
+   AgroSense — Global Styles (Tailwind v4)
+   ─────────────────────────────────────────────────────────────── */
+
+@import "tailwindcss";
+
+/* ── 1. Theme Tokens (Tailwind v4) ────────────────────────────── */
+@theme {
+  /* Brand colors */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Surface colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Semantic colors */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* ── 2. CSS Variables (Light Mode) ────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --background: hsl(40, 20%, 98%);
+  --foreground: hsl(40, 8%, 15%);
+
+  /* Cards & Popovers */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(40, 8%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(40, 8%, 15%);
+
+  /* Brand Colors */
+  --primary: hsl(160, 74%, 25%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(152, 60%, 96%);
+  --secondary-foreground: hsl(162, 83%, 12%);
+  --accent: hsl(38, 78%, 55%);
+  --accent-foreground: hsl(0, 0%, 100%);
+
+  /* States */
+  --muted: hsl(36, 15%, 95%);
+  --muted-foreground: hsl(40, 5%, 40%);
+  --destructive: hsl(1, 73%, 58%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --success: hsl(142, 70%, 45%);
+  --success-foreground: hsl(0, 0%, 100%);
+  --warning: hsl(38, 78%, 55%);
+  --warning-foreground: hsl(0, 0%, 100%);
+  --info: hsl(211, 69%, 54%);
+  --info-foreground: hsl(0, 0%, 100%);
+
+  /* Borders & Inputs */
+  --border: hsl(36, 10%, 88%);
+  --input: hsl(36, 10%, 88%);
+  --ring: hsl(158, 68%, 37%);
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Domain Colors */
+  --crop: hsl(152, 60%, 96%);
+  --crop-foreground: hsl(162, 83%, 12%);
+  --livestock: hsl(43, 90%, 95%);
+  --livestock-foreground: hsl(33, 88%, 22%);
+  --ledger: hsl(142, 70%, 96%);
+  --ledger-foreground: hsl(142, 70%, 35%);
+  --advisory: hsl(210, 80%, 95%);
+  --advisory-foreground: hsl(211, 75%, 36%);
+}
+
+/* ── 3. Dark Mode ────────────────────────────────────────────── */
+.dark {
+  --background: hsl(40, 8%, 10%);
+  --foreground: hsl(40, 20%, 95%);
+
+  --card: hsl(40, 6%, 15%);
+  --card-foreground: hsl(40, 20%, 95%);
+  --popover: hsl(40, 6%, 15%);
+  --popover-foreground: hsl(40, 20%, 95%);
+
+  --primary: hsl(158, 68%, 37%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(163, 89%, 6%);
+  --secondary-foreground: hsl(152, 55%, 88%);
+  --accent: hsl(38, 78%, 55%);
+  --accent-foreground: hsl(0, 0%, 100%);
+
+  --muted: hsl(40, 6%, 22%);
+  --muted-foreground: hsl(38, 5%, 60%);
+  --destructive: hsl(1, 73%, 58%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+
+  --border: hsl(40, 6%, 22%);
+  --input: hsl(40, 6%, 22%);
+  --ring: hsl(158, 68%, 37%);
+
+  --crop: hsl(162, 83%, 8%);
+  --crop-foreground: hsl(152, 55%, 88%);
+  --livestock: hsl(33, 88%, 12%);
+  --livestock-foreground: hsl(43, 88%, 85%);
+  --ledger: hsl(142, 70%, 15%);
+  --ledger-foreground: hsl(142, 70%, 75%);
+  --advisory: hsl(211, 75%, 15%);
+  --advisory-foreground: hsl(210, 70%, 75%);
+}
+
+/* ── 4. Base Styles ─────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--foreground);
+  }
+
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.875rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.125rem; }
+  h6 { font-size: 1rem; }
+
+  /* Links */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Form elements */
+  button, input, textarea, select {
+    font-family: var(--font-sans);
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: hsl(158, 68%, 37% / 0.2);
+    color: var(--foreground);
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
+
+/* ── 5. Components ─────────────────────────────────────────── */
+@layer components {
+  /* Domain Badges */
+  .badge-crop {
+    background-color: var(--crop);
+    color: var(--crop-foreground);
+    border: 1px solid color-mix(in hsl, var(--crop), transparent 50%);
+  }
+
+  .badge-livestock {
+    background-color: var(--livestock);
+    color: var(--livestock-foreground);
+    border: 1px solid color-mix(in hsl, var(--livestock), transparent 50%);
+  }
+
+  .badge-ledger {
+    background-color: var(--ledger);
+    color: var(--ledger-foreground);
+    border: 1px solid color-mix(in hsl, var(--ledger), transparent 50%);
+  }
+
+  .badge-advisory {
+    background-color: var(--advisory);
+    color: var(--advisory-foreground);
+    border: 1px solid color-mix(in hsl, var(--advisory), transparent 50%);
+  }
+
+  /* Cards */
+  .card {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Container */
+  .container-custom {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-custom {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-custom {
+      padding-inline: 2rem;
+    }
+  }
+}
+
+/* ── 6. Utilities ───────────────────────────────────────────── */
+@layer utilities {
+  /* Text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Visually hidden (accessibility) */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Line clamp */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Aspect ratios */
+  .aspect-video {
+    aspect-ratio: 16 / 9;
+  }
+
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* ── 7. Animations ─────────────────────────────────────────── */
+@layer utilities {
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 200ms ease-out forwards;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 500ms ease-out forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 300ms ease-out forwards;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+  }
+
+  /* Animation delays */
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+}
+
+/* ── 8. Accessibility (Reduced Motion) ─────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── 9. Print Styles ───────────────────────────────────────── */
+@media print {
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-before: always;
+  }
+
+  a {
+    color: black;
+    text-decoration: none;
+  }
+}
