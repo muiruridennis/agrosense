@@ -291,5 +291,90 @@ export interface CreateCropInput {
   estimatedYield?: number;
   yieldUnit?: string;
 }
+// ============================================
+// Farm Member Roles and related types
+// ============================================
 
-export type UpdateCropInput = Partial<CreateCropInput>;
+export enum FarmMemberRole {
+  OWNER = "OWNER",
+  MANAGER = "MANAGER",
+  WORKER = "WORKER",
+}
+
+export const getRoleDisplayName = (role: FarmMemberRole): string => {
+  switch (role) {
+    case FarmMemberRole.OWNER:
+      return "Farm Owner";
+    case FarmMemberRole.MANAGER:
+      return "Farm Manager";
+    case FarmMemberRole.WORKER:
+      return "Farm Worker";
+    default:
+      return "Unknown";
+  }
+};
+
+export interface FarmMember {
+  id: string;
+  farmId: string;
+  userId: string;
+  role: FarmMemberRole;
+  joinedAt: string;
+  isActive?: boolean;
+  assignedHouseIds?: string[] | null;
+  user?: { id: string; email?: string; fullName?: string };
+}
+
+// Reuse the existing FarmSummary defined earlier; provide a wrapper for membership responses
+export interface FarmWithRole extends FarmSummary {
+  role: FarmMemberRole;
+}
+
+export interface FarmMembershipResponse {
+  farm: FarmSummary;
+  role: string | FarmMemberRole;
+  isActive: boolean;
+  joinedAt: string;
+  assignedHouseIds?: string[] | null;
+  notes?: string | null;
+}
+export interface PoultryRecord {
+  id: string;
+  flockId: string;
+  recordDate: string;
+
+  mortality: number;
+  culls: number;
+
+  feedConsumedKg: number;
+  feedType: string | null;
+  waterConsumedLitres: number;
+
+  sickBirds: number;
+  medication: string | null;
+
+  temperatureCelsius: number | null;
+
+  morningEggs: number | null;
+  eveningEggs: number | null;
+  brokenEggs: number | null;
+  dirtyEggs: number | null;
+
+  avgBodyWeightKg: number | null;
+  sampleSize: number | null;
+  uniformityPercent: number | null;
+  productionRatePercent: number | null;
+
+  feedConversionRatio: number | null;
+
+  liveBirdsAfterRecord: number;
+
+  feedCost: number;
+  eggRevenue: number;
+  mortalityCost: number;
+
+  healthRiskScore: number;
+
+  createdAt: string;
+  updatedAt: string;
+}

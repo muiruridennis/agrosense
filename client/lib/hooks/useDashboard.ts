@@ -20,12 +20,16 @@ import type {
   UpdateRecordInput,
   PaginatedResult,
 } from "@/types";
+import { FarmMemberRole } from "@/types";
+
+export type UserFarm = FarmSummary & { role: FarmMemberRole };
 import { apiClient } from "../api/client";
 
 // ── Query keys ─────────────────────────────────────────────────────────────────
 export const dashboardKeys = {
   farms: ["dashboard", "farms"] as const,
   alerts: (farmId: string) => ["dashboard", "alerts", farmId] as const,
+
   recommendations: (farmId: string) =>
     ["dashboard", "recommendations", farmId] as const,
   records: (farmId: string) => ["dashboard", "records", farmId] as const,
@@ -34,17 +38,54 @@ export const dashboardKeys = {
 };
 
 // ── Farms ──────────────────────────────────────────────────────────────────────
+// lib/hooks/useDashboard.ts - useFarms section
 export function useFarms() {
   return useQuery({
     queryKey: dashboardKeys.farms,
     queryFn: async () => {
-      const envelope = await apiClient.get<FarmSummary[]>("/farms");
-      return envelope.data ?? [];
+      const envelope = await apiClient.get<any[]>("/users/me/farms");
+
+      const payload = envelope.data ?? [];
+
+      // Normalize role strings (server may return lowercase 'owner' | 'manager' | 'worker')
+      const normalizeRole = (r: unknown): FarmMemberRole => {
+        if (!r || typeof r !== "string") return FarmMemberRole.WORKER;
+        const up = r.toUpperCase();
+        if (up === "OWNER") return FarmMemberRole.OWNER;
+        if (up === "MANAGER") return FarmMemberRole.MANAGER;
+        return FarmMemberRole.WORKER;
+      };
+
+      // Backend may return an array of membership objects { farm, role, ... }
+      // or a flattened farm object with role present. Support both.
+      const farmsWithRole: Array<UserFarm & { members?: any[] }> = payload
+        .map((item) => {
+          // membership-style shape
+          if (item && typeof item === "object" && "farm" in item && item.farm) {
+            const farm = item.farm as any;
+            return {
+              ...farm,
+              role: normalizeRole(item.role ?? farm.role),
+            } as any;
+          }
+
+          // flat farm shape
+          if (item && typeof item === "object") {
+            return {
+              ...item,
+              role: normalizeRole((item as any).role),
+            } as any;
+          }
+
+          return null as any;
+        })
+        .filter(Boolean);
+
+      return farmsWithRole;
     },
     staleTime: 5 * 60 * 1000,
   });
 }
-
 // ── Alerts ────────────────────────────────────────────────────────────────────
 export function useAlerts(farmId: string | undefined) {
   return useQuery({

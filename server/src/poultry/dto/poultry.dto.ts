@@ -10,6 +10,7 @@ import {
   Min,
   Max,
   MaxLength,
+  IsUUID,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { HouseType } from '../entities/poultry-house.entity';
@@ -48,6 +49,11 @@ export class CreateFlockDto {
   @IsNotEmpty()
   @MaxLength(100)
   breed!: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  name?: string;
 
   @IsEnum(FlockType)
   type!: FlockType;
@@ -180,6 +186,10 @@ export class CreateFlockRecordDto {
   @Max(100)
   @IsOptional()
   uniformityPercent?: number;
+
+  @IsUUID()
+  @IsOptional()
+  feedItemId?: string;
 }
 
 export class UpdateFlockRecordDto extends PartialType(CreateFlockRecordDto) {}
@@ -192,4 +202,33 @@ export class ReviewFlockRecordDto {
   @IsString()
   @IsOptional()
   reviewNote?: string;
+}
+export class RecordBirdSaleDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  buyer!: string;
+
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+
+  @IsNumber()
+  @Min(0)
+  pricePerBird!: number;
+
+  @IsDateString()
+  saleDate!: string;
+
+  @IsString()
+  @IsOptional()
+  receiptNumber?: string;
+
+  @IsEnum(['pending', 'paid', 'partial'])
+  @IsOptional()
+  paymentStatus?: 'pending' | 'paid' | 'partial';
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }

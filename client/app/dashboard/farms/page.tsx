@@ -1,111 +1,57 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FarmsTable } from "./farms-table";
-import { FarmFormModal } from "./components/farm-form-modal";
-import { FarmDetailsSheet } from "./components/farm-details-sheet";
-import {
-  useFarms,
-  useCreateFarm,
-  useUpdateFarm,
-  useDeleteFarm,
-  farmKeys,
-} from "@/lib/hooks/useDashboard";
-import { useQueryClient } from "@tanstack/react-query";
-import { Farm, CreateFarmInput, UpdateFarmInput } from "@/types";
+import { useRouter } from "next/navigation";
+
+import { FarmList } from "./components/FarmList";
+import { CreateFarmDialog } from "./components/CreateFarmDialog";
+import { EditFarmDialog } from "./components/EditFarmDialog";
+import { DeleteFarmDialog } from "./components/DeleteFarmDialog";
+import { useFarms } from "./hooks/useFarms";
+import type { Farm } from "./types";
 
 export default function FarmsPage() {
-  // ── Modals state ───────────────────────────────────────────────────────────
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-
-  // ── Data fetching and mutations ────────────────────────────────────────────
-  const { data: farms = [], isPending: isFarmsPending } = useFarms();
-  const createMutation = useCreateFarm();
-  const updateMutation = useUpdateFarm(selectedFarm?.id ?? "");
-  const deleteMutation = useDeleteFarm();
-  const queryClient = useQueryClient();
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  const handleCreateClick = () => {
-    setSelectedFarm(null);
-    setFormModalOpen(true);
-  };
-
-  const handleViewFarm = (farm: Farm) => {
-    setSelectedFarm(farm);
-    setDetailsSheetOpen(true);
-  };
-
-  const handleEditFarm = (farm: Farm) => {
-    setSelectedFarm(farm);
-    setDetailsSheetOpen(false);
-    setFormModalOpen(true);
-  };
-
-  const handleFormSubmit = async (data: CreateFarmInput | UpdateFarmInput) => {
-    if (selectedFarm) {
-      // Edit mode
-      await updateMutation.mutateAsync(data as UpdateFarmInput);
-    } else {
-      // Create mode
-      await createMutation.mutateAsync(data as CreateFarmInput);
-    }
-  };
-
-  const handleDeleteFarm = async (farmId: string) => {
-    await deleteMutation.mutateAsync(farmId);
-  };
-
-  const toolbar = (
-    <Button onClick={handleCreateClick} size="sm" gap="md">
-      <Plus className="h-4 w-4" />
-      Create Farm
-    </Button>
-  );
+  const router = useRouter();
+  const { data: farms, isLoading } = useFarms();
+  const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
+  const [deletingFarm, setDeletingFarm] = useState<Farm | null>(null);
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Farms</h1>
-          <p className="text-muted-foreground">
-            Manage all your farms and agricultural operations
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Farms</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage all your farming operations
           </p>
         </div>
-
-        {/* Table */}
-        <FarmsTable
-          farms={farms}
-          isPending={isFarmsPending}
-          onView={handleViewFarm}
-          onEdit={handleEditFarm}
-          onDelete={handleDeleteFarm}
-          isDeleting={deleteMutation.isPending}
-          toolbar={toolbar}
-        />
+        <CreateFarmDialog />
       </div>
 
-      {/* Modals & Sheets */}
-      <FarmFormModal
-        open={formModalOpen}
-        onOpenChange={setFormModalOpen}
-        farm={selectedFarm}
-        onSubmit={handleFormSubmit}
-        isLoading={createMutation.isPending || updateMutation.isPending}
+      {/* Farm List */}
+      <FarmList
+        farms={farms || []}
+        isLoading={isLoading}
+        onEdit={setEditingFarm}
+        onDelete={setDeletingFarm}
+        onViewDetails={(farm) => {
+        router.push(`/dashboard/farms/${farm.id}`);
+        }}
       />
 
-      <FarmDetailsSheet
-        open={detailsSheetOpen}
-        onOpenChange={setDetailsSheetOpen}
-        farm={selectedFarm}
-        onEdit={handleEditFarm}
+      {/* Dialogs */}
+      <EditFarmDialog
+        farm={editingFarm}
+        open={!!editingFarm}
+        onOpenChange={(open) => !open && setEditingFarm(null)}
       />
-    </>
+
+      <DeleteFarmDialog
+        farm={deletingFarm}
+        open={!!deletingFarm}
+        onOpenChange={(open) => !open && setDeletingFarm(null)}
+      />
+    </div>
   );
 }

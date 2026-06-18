@@ -1,10 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { PoultryHouse } from './poultry-house.entity';
 import { FlockRecord } from './flock-record.entity';
 import { BaseEntity } from '../../common/entities/base.entity';
@@ -12,6 +6,8 @@ import { BaseEntity } from '../../common/entities/base.entity';
 export enum FlockType {
   LAYERS = 'layers', // egg production
   BROILERS = 'broilers', // meat production
+  UNKNOWN = 'unknown',
+  KIENYEJI = 'kienyeji',
 }
 
 export enum FlockStatus {
@@ -44,6 +40,9 @@ export enum FlockStage {
 export class Flock extends BaseEntity {
   @Column({ type: 'uuid' })
   houseId!: string;
+  
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  name!: string | null;
 
   @ManyToOne(() => PoultryHouse, (house) => house.flocks, {
     onDelete: 'CASCADE',
@@ -160,6 +159,17 @@ export class Flock extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
+  @Column({ type: 'jsonb', nullable: true })
+  sales!: {
+    buyer: string;
+    quantity: number;
+    pricePerBird: number;
+    totalAmount: number;
+    saleDate: Date;
+    receiptNumber?: string;
+    paymentStatus: 'pending' | 'paid' | 'partial';
+    notes?: string;
+  }[];
 
   @OneToMany(() => FlockRecord, (record) => record.flock, { cascade: true })
   records!: FlockRecord[];

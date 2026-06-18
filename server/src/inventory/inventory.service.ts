@@ -173,7 +173,7 @@ export class InventoryService {
     // EMIT EVENT for Finance integration
 
     const saved = await this.purchaseRepo.save(purchase);
-    this.eventEmitter.emit('inventory.purchase.created', {
+    await this.eventEmitter.emit('inventory.purchase.created', {
       purchaseId: saved.id,
       farmId: saved.farmId,
       itemId: saved.itemId,

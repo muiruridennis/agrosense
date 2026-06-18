@@ -9,6 +9,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PoultryHouse } from './entities/poultry-house.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 import {
   Flock,
   FlockStatus,
@@ -25,6 +27,7 @@ import {
   UpdateFlockRecordDto,
   ReviewFlockRecordDto,
 } from './dto/poultry.dto';
+import { RevenueCategory } from '../finance/enums/revenue-category.enum';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
@@ -59,6 +62,7 @@ export class PoultryService {
     private readonly recordRepo: Repository<FlockRecord>,
 
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -103,6 +107,23 @@ export class PoultryService {
     return this.houseRepo.save(house);
   }
 
+  async deleteHouse(houseId: string): Promise<void> {
+    const house = await this.houseRepo.findOne({
+      where: { id: houseId },
+      relations: ['flocks'],
+    });
+
+    if (!house) throw new NotFoundException('House not found');
+
+    if (house.flocks && house.flocks.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete house while it has ${house.flocks.length} flock(s). Delete flocks first.`,
+      );
+    }
+
+    await this.houseRepo.delete(houseId);
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════════
   // FLOCK LIFECYCLE INTELLIGENCE ENGINE
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -117,17 +138,48 @@ export class PoultryService {
   async createFlock(houseId: string, dto: CreateFlockDto): Promise<Flock> {
     const house = await this.getHouse(houseId);
 
-    // Prevent multiple active flocks in same house
-    const activeFlock = await this.flockRepo.findOne({
-      where: { houseId, status: FlockStatus.ACTIVE },
-    });
-    if (activeFlock) {
-      throw new ConflictException(
-        `House "${house.name}" already has an active flock. Close it before starting a new batch.`,
+    // ── 1. One active flock per house (existing check) ───────────────────────
+    // const activeFlock = await this.flockRepo.findOne({
+    //   where: { houseId, status: FlockStatus.ACTIVE },
+    // });
+    // if (activeFlock) {
+    //   throw new ConflictException(
+    //     `House "${house.name}" already has an active flock. ` +
+    //       `Close "${activeFlock.breed}" before starting a new batch.`,
+    //   );
+    // }
+
+    // ── 1. Capacity validation (NEW) ─────────────────────────────────────────
+    // Count birds currently occupying space: only active flocks consume capacity.
+    const occupiedResult = await this.flockRepo
+      .createQueryBuilder('flock')
+      .select('COALESCE(SUM(flock.currentCount), 0)', 'occupied')
+      .where('flock.houseId = :houseId', { houseId })
+      .andWhere('flock.status = :status', { status: FlockStatus.ACTIVE })
+      .getRawOne<{ occupied: string }>();
+
+    const currentlyOccupied = parseInt(occupiedResult?.occupied ?? '0', 10);
+    const availableSpace = house.capacity - currentlyOccupied;
+
+    // Early return: if no space at all
+    if (availableSpace <= 0) {
+      throw new BadRequestException(
+        `House "${house.name}" is at full capacity (${house.capacity}/${house.capacity} birds). ` +
+          `No space available for new flock.`,
       );
     }
 
-    // Validate flock type requirements
+    if (dto.initialCount > availableSpace) {
+      throw new BadRequestException(
+        `House "${house.name}" cannot accommodate ${dto.initialCount.toLocaleString()} birds. ` +
+          `Capacity: ${house.capacity.toLocaleString()} · ` +
+          `Currently occupied: ${currentlyOccupied.toLocaleString()} · ` +
+          `Available: ${availableSpace.toLocaleString()}. ` +
+          `Try reducing flock size by ${(dto.initialCount - availableSpace).toLocaleString()} birds.`,
+      );
+    }
+
+    // ── 3. Flock type requirements (existing checks) ─────────────────────────
     if (dto.type === FlockType.BROILERS && !dto.targetWeightKg) {
       throw new BadRequestException('targetWeightKg is required for broilers');
     }
@@ -138,6 +190,10 @@ export class PoultryService {
       throw new BadRequestException(
         'productionStartWeek is required for layers',
       );
+    }
+    if (!dto.name) {
+      const flockCount = await this.flockRepo.count({ where: { houseId } });
+      dto.name = `Batch ${flockCount + 1}`;
     }
 
     // Create flock with initialization
@@ -170,7 +226,7 @@ export class PoultryService {
     if (type === FlockType.BROILERS) {
       return FlockStage.BROODING;
     }
-    return FlockStage.BROODING; // Layers also start brooding
+    return FlockStage.PLACED; // Layers also start brooding
   }
 
   /**
@@ -303,32 +359,198 @@ export class PoultryService {
       relations: ['records'],
     });
 
-    if (!flock) {
-      throw new NotFoundException(`Flock ${flockId} not found`);
-    }
-
+    if (!flock) throw new NotFoundException();
     if (flock.status === FlockStatus.CLOSED) {
-      return {
-        flock,
-        closureReport: { message: 'Flock already closed' },
-      };
+      return { flock, closureReport: { message: 'Already closed' } };
     }
 
-    // Calculate final metrics
-    const closureReport = await this.generateClosureReport(flock);
+    // ✅ VALIDATE: All birds accounted for
+    const totalSoldOrDead = flock.initialCount - flock.currentCount;
+    if (totalSoldOrDead < flock.initialCount) {
+      throw new BadRequestException(
+        `Cannot close. ${flock.currentCount} birds still alive. Record sales or mortality first.`,
+      );
+    }
 
-    // Update flock
+    // ✅ USE EXISTING DATA - NO ESTIMATES!
+    const totalMortality = flock.initialCount - flock.currentCount;
+    const mortalityPercent = (totalMortality / flock.initialCount) * 100;
+
+    // Calculate FCR if broilers
+    let fcr: number | null = null;
+    if (flock.type === FlockType.BROILERS && flock.records?.length) {
+      const totalFeed = flock.records.reduce(
+        (sum, r) => sum + r.feedConsumedKg,
+        0,
+      );
+      const totalWeightGain = flock.records.reduce(
+        (sum, r) => sum + (r.avgBodyWeightKg || 0) * (r.sampleSize || 1),
+        0,
+      );
+      fcr = totalWeightGain > 0 ? totalFeed / totalWeightGain : null;
+    }
+
+    // ✅ UPDATE FLOCK - JUST MARK AS CLOSED
     flock.status = FlockStatus.CLOSED;
+    flock.currentStage = FlockStage.CLOSED;
     flock.closedAt = new Date();
-    flock.depletionReason = closureReport.reason;
-    flock.finalMortalityPercent = closureReport.mortalityPercent;
-    flock.feedConversionRatio = closureReport.feedConversionRatio;
+    flock.depletionReason = 'Harvest completed';
+    flock.finalMortalityPercent = mortalityPercent;
+    flock.feedConversionRatio = fcr;
+
+    // Net profit already calculated from daily updates!
+    // No need to recalculate!
 
     await this.flockRepo.save(flock);
-
-    return { flock, closureReport };
+    return {
+      flock,
+      closureReport: {
+        message: 'Flock closed successfully',
+        netProfit: flock.netProfit,
+        roi: flock.roiPercent,
+      },
+    };
   }
 
+  async getFlock(flockId: string): Promise<Flock> {
+    const flock = await this.flockRepo.findOne({ where: { id: flockId } });
+    if (!flock) throw new NotFoundException();
+    return flock;
+  }
+
+  async updateFlock(flockId: string, dto: UpdateFlockDto): Promise<Flock> {
+    const flock = await this.flockRepo.findOne({
+      where: { id: flockId },
+      relations: ['house'],
+    });
+    if (!flock) throw new NotFoundException(`Flock ${flockId} not found`);
+
+    // Prevent shrinking initialCount below current live count
+    if (
+      dto.initialCount !== undefined &&
+      dto.initialCount < (flock.currentCount ?? 0)
+    ) {
+      throw new BadRequestException(
+        'initialCount cannot be less than currentCount',
+      );
+    }
+
+    // Normalize date fields if provided
+    if (dto.placementDate) {
+      // Allow either Date or ISO string
+      flock.placementDate = new Date(dto.placementDate as any);
+    }
+
+    Object.assign(flock, dto);
+
+    const saved = await this.flockRepo.save(flock);
+
+    // Re-evaluate flock stage after updates
+    await this.updateFlockStage(saved);
+
+    return saved;
+  }
+
+  async deleteFlock(flockId: string, farmId: string): Promise<void> {
+    const flock = await this.flockRepo.findOne({ where: { id: flockId } });
+    if (!flock) throw new NotFoundException();
+
+    // Check if flock has records
+    const recordCount = await this.recordRepo.count({ where: { flockId } });
+    if (recordCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete flock with ${recordCount} records. Delete records first.`,
+      );
+    }
+
+    if (flock.status === FlockStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Cannot delete an active flock. Close it first.',
+      );
+    }
+
+    await this.flockRepo.delete(flockId);
+  }
+  // In poultry.service.ts
+
+  async recordBirdSale(
+    flockId: string,
+    saleDetails: {
+      buyer: string;
+      quantity: number;
+      pricePerBird: number;
+      saleDate: Date;
+      receiptNumber?: string;
+      paymentStatus?: 'pending' | 'paid' | 'partial';
+      notes?: string;
+    },
+  ): Promise<Flock> {
+    const flock = await this.flockRepo.findOne({
+      where: { id: flockId },
+      relations: ['house'],
+    });
+
+    if (!flock) throw new NotFoundException(`Flock ${flockId} not found`);
+    if (flock.status === FlockStatus.CLOSED) {
+      throw new BadRequestException('Cannot record sale for a closed flock');
+    }
+    if (saleDetails.quantity > flock.currentCount) {
+      throw new BadRequestException(
+        `Only ${flock.currentCount} birds available`,
+      );
+    }
+
+    const totalAmount = saleDetails.quantity * saleDetails.pricePerBird;
+    if (!flock.sales) {
+      flock.sales = [];
+    }
+
+    flock.sales.push({
+      buyer: saleDetails.buyer,
+      quantity: saleDetails.quantity,
+      pricePerBird: saleDetails.pricePerBird,
+      totalAmount,
+      saleDate: saleDetails.saleDate,
+      receiptNumber: saleDetails.receiptNumber,
+      paymentStatus: saleDetails.paymentStatus || 'pending',
+      notes: saleDetails.notes,
+    });
+
+    // ✅ ONLY update these two fields
+    flock.revenueTotal += totalAmount;
+    flock.currentCount -= saleDetails.quantity;
+
+    flock.netProfit = flock.revenueTotal - flock.feedCostTotal;
+    flock.roiPercent =
+      flock.feedCostTotal > 0
+        ? (flock.netProfit / flock.feedCostTotal) * 100
+        : 0;
+
+    const saved = await this.flockRepo.save(flock);
+
+    // Emit event for finance
+    this.eventEmitter.emit('poultry.bird_sale.recorded', {
+      // Required for CreateRevenueEntryDto
+      category:
+        flock.type === 'layers'
+          ? RevenueCategory.LIVE_BIRDS
+          : RevenueCategory.MEAT,
+      description: `${saleDetails.quantity} ${flock.breed} ${flock.type === 'layers' ? 'spent layers' : 'broilers'} sold to ${saleDetails.buyer}`,
+      soldDate: saleDetails.saleDate.toISOString().split('T')[0],
+      quantity: saleDetails.quantity,
+      unit: 'bird',
+      unitPrice: saleDetails.pricePerBird,
+      farmId: flock.house.farmId,
+
+      // Optional fields
+      buyer: saleDetails.buyer,
+      relatedProductionLogId: flockId,
+      receiptNumber: saleDetails.receiptNumber,
+      notes: `Flock type: ${flock.type}. Breed: ${flock.breed}. Sale completed.`,
+    });
+
+    return saved;
+  }
   /**
    * Generate comprehensive closure report
    */
@@ -500,6 +722,21 @@ export class PoultryService {
 
     // Detect anomalies and generate alerts
     const alerts = await this.detectAndGenerateAlerts(saved, flock);
+    // After saving the record, emit event
+    this.eventEmitter.emit('poultry.flock_record.created', {
+      flockRecordId: saved.id,
+      flockId: flock.id,
+      farmId: flock.house.farmId,
+      feedItemId: dto.feedItemId,
+      feedConsumedKg: dto.feedConsumedKg,
+      eggsProduced: (dto.morningEggs || 0) + (dto.eveningEggs || 0),
+      recordDate: saved.recordDate,
+      mortalityCount: (dto.mortality || 0) + (dto.culls || 0),
+      supplier: dto.feedType || 'unknown',
+      flockType: flock.type,
+      breed: flock.breed,
+      liveBirds: saved.liveBirdsAfterRecord,
+    });
 
     return {
       record: saved,
@@ -838,6 +1075,30 @@ export class PoultryService {
 
     return analysis;
   }
+  async deleteRecord(recordId: string): Promise<void> {
+    const record = await this.recordRepo.findOne({
+      where: { id: recordId },
+      relations: ['flock', 'flock.house'],
+    });
+
+    if (!record) throw new NotFoundException('Record not found');
+
+    await this.recordRepo.delete(recordId);
+  }
+
+  async getRecord(recordId: string, farmId: string): Promise<FlockRecord> {
+    const record = await this.recordRepo.findOne({
+      where: { id: recordId },
+      relations: ['flock', 'flock.house', 'submittedBy', 'reviewedBy'],
+    });
+
+    if (!record) throw new NotFoundException('Record not found');
+    if (record.flock.house.farmId !== farmId) {
+      throw new ForbiddenException('Record does not belong to this farm');
+    }
+
+    return record;
+  }
 
   async getRecords(
     flockId: string,
@@ -854,6 +1115,32 @@ export class PoultryService {
       where: { flockId },
       relations: ['submittedBy', 'reviewedBy'],
       order: { recordDate: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { records, total };
+  }
+
+  /**
+   * Get records awaiting review (status = SUBMITTED) for a flock
+   * Ordered oldest first to present a review queue.
+   */
+  async getPendingReviewRecords(
+    flockId: string,
+    page = 1,
+    limit = 30,
+  ): Promise<{ records: FlockRecord[]; total: number }> {
+    const flock = await this.flockRepo.findOne({
+      where: { id: flockId },
+      relations: ['house'],
+    });
+    if (!flock) throw new NotFoundException();
+
+    const [records, total] = await this.recordRepo.findAndCount({
+      where: { flockId, status: RecordStatus.SUBMITTED },
+      relations: ['submittedBy', 'reviewedBy'],
+      order: { recordDate: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
     });

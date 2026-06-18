@@ -3,6 +3,7 @@ export enum RevenueCategory {
   EGGS = 'eggs',
   BROILERS = 'broilers',
   BREEDING_STOCK = 'breeding_stock',
+  LIVE_BIRDS = 'live_birds',
 
   // Dairy
   MILK = 'milk',

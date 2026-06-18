@@ -185,7 +185,7 @@ export class UserFarmController {
 
   @Get('farms')
   getUserFarms(@Req() req: RequestWithUser) {
-    return this.membersService.getUserFarms(req.user.id);
+    return this.membersService.findAccessibleFarms(req.user.id);
   }
 
   @Get('manager-farms')

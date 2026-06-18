@@ -8,7 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, LessThanOrEqual } from 'typeorm';
+import { Repository, In, LessThanOrEqual, QueryRunner } from 'typeorm';
 import { randomBytes, createHash } from 'crypto';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { UsersService } from '../users/users.service';
@@ -134,42 +134,42 @@ export class FarmMembersService {
   }
   // farm-members/farm-members.service.ts
 
-/**
- * Add owner as a farm member (special case - no phone number needed)
- * Called automatically when a farm is created
- */
-async addOwnerAsMember(farmId: string, ownerId: string): Promise<FarmMember> {
-  // Check if member already exists
-  const existing = await this.memberRepo.findOne({
+  /**
+   * Add owner as a farm member (special case - no phone number needed)
+   * Called automatically when a farm is created
+   */
+  // farm-members.service.ts
+async addOwnerAsMember(
+  farmId: string,
+  ownerId: string,
+  queryRunner: QueryRunner,   // ← receive it
+): Promise<FarmMember> {
+  const existing = await queryRunner.manager.findOne(FarmMember, {
     where: { farmId, userId: ownerId },
   });
 
   if (existing) {
-    // If exists but inactive, reactivate
     if (!existing.isActive) {
       existing.isActive = true;
       existing.role = FarmMemberRole.OWNER;
       existing.updatedAt = new Date();
-      return this.memberRepo.save(existing);
+      return queryRunner.manager.save(existing);
     }
-    // Already active owner member
     return existing;
   }
 
-  // Create new owner member record
-  const member = this.memberRepo.create({
+  const member = queryRunner.manager.create(FarmMember, {
     farmId,
     userId: ownerId,
     role: FarmMemberRole.OWNER,
     assignedHouseIds: null,
     joinedAt: new Date(),
     isActive: true,
-    createdBy: ownerId, 
+    createdBy: ownerId,
   });
 
-  const savedMember = await this.memberRepo.save(member);
+  const savedMember = await queryRunner.manager.save(member);
   this.logger.log(`Owner ${ownerId} added as member to farm ${farmId}`);
-  
   return savedMember;
 }
 
@@ -730,6 +730,28 @@ async addOwnerAsMember(farmId: string, ownerId: string): Promise<FarmMember> {
     });
 
     return Array.from(farmMap.values());
+  }
+
+  /**
+   * Get all accessible farms for a user (owner, manager, or worker).
+   * Returns farms with role information attached for dashboard context.
+   *
+   * This is the primary method for retrieving the current user's farm access,
+   * centralizing membership-based farm access logic.
+   *
+   * Flow: authenticated user → active memberships → associated farms → role/context
+   *
+   * @param userId - The authenticated user's ID
+   * @returns Array of farms with role information, ordered by join date (newest first)
+   */
+  async findAccessibleFarms(userId: string): Promise<any[]> {
+    const memberships = await this.memberRepo.find({
+      where: { userId, isActive: true },
+      relations: ['farm'],
+      order: { joinedAt: 'DESC' },
+    });
+  
+    return memberships
   }
 
   /**

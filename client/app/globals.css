@@ -5,87 +5,50 @@
 @import "tailwindcss";
 
 /* ── 1. Theme Tokens (Tailwind v4) ────────────────────────────── */
+/*
+   @theme holds static values resolved at build time.
+   These drive Tailwind utility generation (bg-primary, text-foreground, etc).
+   For dark mode, CSS custom properties in .dark override the runtime values
+   that components reference via var(--color-*).
+*/
 @theme {
-  /* Brand colors */
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
+  --color-primary:              hsl(160, 65%, 36%);
+  --color-primary-foreground:   hsl(0, 0%, 100%);
+  --color-secondary:            hsl(152, 45%, 94%);
+  --color-secondary-foreground: hsl(162, 75%, 14%);
+  --color-accent:               hsl(28, 72%, 52%);
+  --color-accent-foreground:    hsl(0, 0%, 100%);
+  --color-destructive:          hsl(1, 73%, 56%);
+  --color-destructive-foreground: hsl(0, 0%, 100%);
 
-  /* Surface colors */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-background:           hsl(160, 4%, 98%);
+  --color-foreground:           hsl(40, 10%, 13%);
+  --color-card:                 hsl(0, 0%, 100%);
+  --color-card-foreground:      hsl(40, 10%, 13%);
+  --color-popover:              hsl(0, 0%, 100%);
+  --color-popover-foreground:   hsl(40, 10%, 13%);
+  --color-muted:                hsl(160, 6%, 95%);
+  --color-muted-foreground:     hsl(40, 5%, 42%);
+  --color-border:               hsl(36, 10%, 84%);
+  --color-input:                hsl(36, 10%, 84%);
+  --color-ring:                 hsl(160, 65%, 36%);
 
-  /* Semantic colors */
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
+  --color-success:              hsl(138, 55%, 40%);
+  --color-success-foreground:   hsl(0, 0%, 100%);
+  --color-warning:              hsl(42, 90%, 52%);
+  --color-warning-foreground:   hsl(40, 10%, 13%);
+  --color-info:                 hsl(211, 69%, 54%);
+  --color-info-foreground:      hsl(0, 0%, 100%);
+  --color-black:                hsl(0, 0%, 0%);
 
-  /* Radius */
+   /* Radius */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-}
-
-/* ── 2. CSS Variables (Light Mode) ────────────────────────────── */
-:root {
-  /* Backgrounds */
-  --background: hsl(40, 20%, 98%);
-  --foreground: hsl(40, 8%, 15%);
-
-  /* Cards & Popovers */
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(40, 8%, 15%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(40, 8%, 15%);
-
-  /* Brand Colors */
-  --primary: hsl(160, 74%, 25%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(152, 60%, 96%);
-  --secondary-foreground: hsl(162, 83%, 12%);
-  --accent: hsl(38, 78%, 55%);
-  --accent-foreground: hsl(0, 0%, 100%);
-
-  /* States */
-  --muted: hsl(36, 15%, 95%);
-  --muted-foreground: hsl(40, 5%, 40%);
-  --destructive: hsl(1, 73%, 58%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --success: hsl(142, 70%, 45%);
-  --success-foreground: hsl(0, 0%, 100%);
-  --warning: hsl(38, 78%, 55%);
-  --warning-foreground: hsl(0, 0%, 100%);
-  --info: hsl(211, 69%, 54%);
-  --info-foreground: hsl(0, 0%, 100%);
-
-  /* Borders & Inputs */
-  --border: hsl(36, 10%, 88%);
-  --input: hsl(36, 10%, 88%);
-  --ring: hsl(158, 68%, 37%);
-
-  /* Radius */
-  --radius: 0.5rem;
 
   /* Fonts */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Shadows */
@@ -93,57 +56,59 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
-  /* Domain Colors */
-  --crop: hsl(152, 60%, 96%);
-  --crop-foreground: hsl(162, 83%, 12%);
-  --livestock: hsl(43, 90%, 95%);
-  --livestock-foreground: hsl(33, 88%, 22%);
-  --ledger: hsl(142, 70%, 96%);
-  --ledger-foreground: hsl(142, 70%, 35%);
-  --advisory: hsl(210, 80%, 95%);
-  --advisory-foreground: hsl(211, 75%, 36%);
 }
 
-/* ── 3. Dark Mode ────────────────────────────────────────────── */
+/* ── 2. Dark Mode Overrides ───────────────────────────────────── */
+/*
+   Tailwind v4 reads --color-* at runtime too, so overriding them in .dark
+   makes dark-mode-aware utilities (e.g. dark:bg-background) work correctly.
+*/
 .dark {
-  --background: hsl(40, 8%, 10%);
-  --foreground: hsl(40, 20%, 95%);
+  --color-background:           hsl(40, 8%, 10%);
+  --color-foreground:           hsl(40, 20%, 95%);
 
-  --card: hsl(40, 6%, 15%);
-  --card-foreground: hsl(40, 20%, 95%);
-  --popover: hsl(40, 6%, 15%);
-  --popover-foreground: hsl(40, 20%, 95%);
+  --color-card:                 hsl(40, 6%, 15%);
+  --color-card-foreground:      hsl(40, 20%, 95%);
+  --color-popover:              hsl(40, 6%, 15%);
+  --color-popover-foreground:   hsl(40, 20%, 95%);
 
-  --primary: hsl(158, 68%, 37%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(163, 89%, 6%);
-  --secondary-foreground: hsl(152, 55%, 88%);
-  --accent: hsl(38, 78%, 55%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  --color-primary:              hsl(158, 68%, 37%);
+  --color-primary-foreground:   hsl(0, 0%, 100%);
+  --color-secondary:            hsl(163, 89%, 6%);
+  --color-secondary-foreground: hsl(152, 55%, 88%);
+  --color-accent:               hsl(38, 78%, 55%);
+  --color-accent-foreground:    hsl(0, 0%, 100%);
 
-  --muted: hsl(40, 6%, 22%);
-  --muted-foreground: hsl(38, 5%, 60%);
-  --destructive: hsl(1, 73%, 58%);
-  --destructive-foreground: hsl(0, 0%, 100%);
+  --color-muted:                hsl(40, 6%, 22%);
+  --color-muted-foreground:     hsl(38, 5%, 60%);
+  --color-destructive:          hsl(1, 73%, 58%);
+  --color-destructive-foreground: hsl(0, 0%, 100%);
 
-  --border: hsl(40, 6%, 22%);
-  --input: hsl(40, 6%, 22%);
-  --ring: hsl(158, 68%, 37%);
+  --color-border:               hsl(40, 6%, 22%);
+  --color-input:                hsl(40, 6%, 22%);
+  --color-ring:                 hsl(158, 68%, 37%);
 
-  --crop: hsl(162, 83%, 8%);
-  --crop-foreground: hsl(152, 55%, 88%);
-  --livestock: hsl(33, 88%, 12%);
-  --livestock-foreground: hsl(43, 88%, 85%);
-  --ledger: hsl(142, 70%, 15%);
-  --ledger-foreground: hsl(142, 70%, 75%);
-  --advisory: hsl(211, 75%, 15%);
-  --advisory-foreground: hsl(210, 70%, 75%);
+  --color-success:              hsl(142, 70%, 45%);
+  --color-success-foreground:   hsl(0, 0%, 100%);
+  --color-warning:              hsl(38, 78%, 55%);
+  --color-warning-foreground:   hsl(0, 0%, 100%);
+  --color-info:                 hsl(211, 69%, 54%);
+  --color-info-foreground:      hsl(0, 0%, 100%);
+
+  --color-crop:                 hsl(162, 83%, 8%);
+  --color-crop-foreground:      hsl(152, 55%, 88%);
+  --color-livestock:            hsl(33, 88%, 12%);
+  --color-livestock-foreground: hsl(43, 88%, 85%);
+  --color-ledger:               hsl(142, 70%, 15%);
+  --color-ledger-foreground:    hsl(142, 70%, 75%);
+  --color-advisory:             hsl(211, 75%, 15%);
+  --color-advisory-foreground:  hsl(210, 70%, 75%);
 }
 
-/* ── 4. Base Styles ─────────────────────────────────────────── */
+/* ── 3. Base Styles ─────────────────────────────────────────── */
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: var(--color-border);
   }
 
   html {
@@ -154,8 +119,8 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     font-family: var(--font-sans);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -167,7 +132,7 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.25;
-    color: var(--foreground);
+    color: var(--color-foreground);
   }
 
   h1 { font-size: 2.25rem; }
@@ -179,7 +144,7 @@
 
   /* Links */
   a {
-    color: var(--primary);
+    color: var(--color-primary);
     text-decoration: none;
     transition: color 150ms ease;
   }
@@ -193,15 +158,15 @@
     font-family: var(--font-sans);
   }
 
-  /* Selection */
+  /* Selection — fixed: use space-separated hsl() for alpha */
   ::selection {
-    background-color: hsl(158, 68%, 37% / 0.2);
-    color: var(--foreground);
+    background-color: hsl(158 68% 37% / 0.2);
+    color: var(--color-foreground);
   }
 
   /* Focus ring */
   :focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -217,46 +182,125 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--color-border);
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-foreground);
+    background: var(--color-muted-foreground);
   }
+}
+
+/* ── 4. Keyframes (top-level, outside @layer) ───────────────── */
+/*
+   Defined at top level so they're globally available regardless of
+   cascade layer ordering.
+*/
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
 }
 
 /* ── 5. Components ─────────────────────────────────────────── */
 @layer components {
+
+  /* ── 9. shadcn UI Component Styles ────────────────────────── */
+@layer components {
+  /* Tabs */
+  .tabs-list {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-muted);
+    padding: 0.25rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .tabs-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: calc(var(--radius-md) - 0.125rem);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    background-color: transparent;
+    color: var(--color-muted-foreground);
+    box-shadow: none;
+  }
+
+  .tabs-trigger:hover {
+    color: var(--color-foreground);
+  }
+
+  .tabs-trigger[data-state="active"] {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tabs-trigger:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  .tabs-trigger:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .tabs-content {
+    margin-top: 0.5rem;
+    display: block;
+  }
+}
   /* Domain Badges */
   .badge-crop {
-    background-color: var(--crop);
-    color: var(--crop-foreground);
-    border: 1px solid color-mix(in hsl, var(--crop), transparent 50%);
+    background-color: var(--color-crop);
+    color: var(--color-crop-foreground);
+    border: 1px solid color-mix(in hsl, var(--color-crop), transparent 50%);
   }
 
   .badge-livestock {
-    background-color: var(--livestock);
-    color: var(--livestock-foreground);
-    border: 1px solid color-mix(in hsl, var(--livestock), transparent 50%);
+    background-color: var(--color-livestock);
+    color: var(--color-livestock-foreground);
+    border: 1px solid color-mix(in hsl, var(--color-livestock), transparent 50%);
   }
 
   .badge-ledger {
-    background-color: var(--ledger);
-    color: var(--ledger-foreground);
-    border: 1px solid color-mix(in hsl, var(--ledger), transparent 50%);
+    background-color: var(--color-ledger);
+    color: var(--color-ledger-foreground);
+    border: 1px solid color-mix(in hsl, var(--color-ledger), transparent 50%);
   }
 
   .badge-advisory {
-    background-color: var(--advisory);
-    color: var(--advisory-foreground);
-    border: 1px solid color-mix(in hsl, var(--advisory), transparent 50%);
+    background-color: var(--color-advisory);
+    color: var(--color-advisory-foreground);
+    border: 1px solid color-mix(in hsl, var(--color-advisory), transparent 50%);
   }
 
   /* Cards */
   .card {
-    background-color: var(--card);
-    border: 1px solid var(--border);
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     transition: box-shadow 200ms ease, transform 200ms ease;
@@ -323,59 +367,10 @@
   }
 
   /* Aspect ratios */
-  .aspect-video {
-    aspect-ratio: 16 / 9;
-  }
+  .aspect-video  { aspect-ratio: 16 / 9; }
+  .aspect-square { aspect-ratio: 1 / 1; }
 
-  .aspect-square {
-    aspect-ratio: 1 / 1;
-  }
-}
-
-/* ── 7. Animations ─────────────────────────────────────────── */
-@layer utilities {
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes slide-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes pulse-subtle {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
-    }
-  }
-
+  /* Animations */
   .animate-fade-in {
     animation: fade-in 200ms ease-out forwards;
   }
@@ -393,20 +388,12 @@
   }
 
   /* Animation delays */
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-
-  .animation-delay-400 {
-    animation-delay: 400ms;
-  }
-
-  .animation-delay-600 {
-    animation-delay: 600ms;
-  }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-600 { animation-delay: 600ms; }
 }
 
-/* ── 8. Accessibility (Reduced Motion) ─────────────────────── */
+/* ── 7. Accessibility (Reduced Motion) ─────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -418,7 +405,7 @@
   }
 }
 
-/* ── 9. Print Styles ───────────────────────────────────────── */
+/* ── 8. Print Styles ───────────────────────────────────────── */
 @media print {
   body {
     background: white;

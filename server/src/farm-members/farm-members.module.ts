@@ -6,6 +6,7 @@ import { FarmMembersService } from './farm-members.service';
 import {
   FarmMembersController,
   FarmInvitationsController,
+  UserFarmController,
 } from './farm-members.controller';
 import { UsersModule } from '../users/users.module';
 import { FarmsModule } from '../farms/farms.module';
@@ -15,9 +16,12 @@ import { FarmsModule } from '../farms/farms.module';
     TypeOrmModule.forFeature([FarmMember, FarmInvitation]),
     forwardRef(() => FarmsModule), // ✅ Wrap with forwardRef
     UsersModule,
-    
   ],
-  controllers: [FarmMembersController, FarmInvitationsController],
+  controllers: [
+    FarmMembersController,
+    FarmInvitationsController,
+    UserFarmController,
+  ],
   providers: [FarmMembersService],
   exports: [FarmMembersService],
 })
