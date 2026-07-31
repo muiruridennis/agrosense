@@ -2,7 +2,15 @@
 "use client";
 
 import { useState } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
@@ -35,10 +43,14 @@ function CustomTooltip({ active, payload, label }: any) {
         <div className="mt-1 pt-1 border-t border-border/50">
           <div className="flex items-center justify-between gap-4 text-sm">
             <span className="text-muted-foreground">Profit:</span>
-            <span className={cn(
-              "font-mono font-medium",
-              (payload[0]?.value - payload[1]?.value) >= 0 ? "text-emerald-600" : "text-rose-600"
-            )}>
+            <span
+              className={cn(
+                "font-mono font-medium",
+                payload[0]?.value - payload[1]?.value >= 0
+                  ? "text-emerald-600"
+                  : "text-rose-600",
+              )}
+            >
               KES {(payload[0]?.value - payload[1]?.value).toLocaleString()}
             </span>
           </div>
@@ -50,13 +62,19 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export function CashflowChart({ farmId }: CashflowChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
-  const { cashflow, isLoading, isCashflowError } = useFarmCharts(farmId, timeRange);
+  const { cashflow, isLoading, isCashflowError } = useFarmCharts(
+    farmId,
+    timeRange,
+  );
 
   const getRangeLabel = () => {
     switch (timeRange) {
-      case "week": return "Last 7 days";
-      case "month": return "Last 30 days";
-      case "year": return "Last 12 months";
+      case "week":
+        return "Last 7 days";
+      case "month":
+        return "Last 30 days";
+      case "year":
+        return "Last 12 months";
     }
   };
 
@@ -82,11 +100,15 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
     );
   }
 
-  const hasData = cashflow?.daily?.some((d: any) => d.revenue > 0 || d.costs > 0);
-  
+  const hasData = cashflow?.daily?.some(
+    (d: any) => d.revenue > 0 || d.costs > 0,
+  );
+
   // Calculate net profit from available data
-  const totalRevenue = cashflow?.daily?.reduce((sum: number, d: any) => sum + d.revenue, 0) || 0;
-  const totalCosts = cashflow?.daily?.reduce((sum: number, d: any) => sum + d.costs, 0) || 0;
+  const totalRevenue =
+    cashflow?.daily?.reduce((sum: number, d: any) => sum + d.revenue, 0) || 0;
+  const totalCosts =
+    cashflow?.daily?.reduce((sum: number, d: any) => sum + d.costs, 0) || 0;
   const netProfit = totalRevenue - totalCosts;
 
   return (
@@ -98,7 +120,7 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
             <h3 className="text-sm font-medium">Cash Flow</h3>
             <p className="text-xs text-muted-foreground">{getRangeLabel()}</p>
           </div>
-          
+
           {/* Time Range Toggle - Always enabled, even if no data */}
           <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5">
             <button
@@ -107,7 +129,7 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
                 "px-3 py-1 text-xs font-medium rounded-md transition-all",
                 timeRange === "week"
                   ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Week
@@ -118,7 +140,7 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
                 "px-3 py-1 text-xs font-medium rounded-md transition-all",
                 timeRange === "month"
                   ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Month
@@ -129,7 +151,7 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
                 "px-3 py-1 text-xs font-medium rounded-md transition-all",
                 timeRange === "year"
                   ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               Year
@@ -140,8 +162,15 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
         {/* Profit Summary - Show even if no data (will show 0) */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">Net Profit ({getRangeLabel()})</p>
-            <p className={cn("text-lg font-bold", netProfit >= 0 ? "text-emerald-600" : "text-red-600")}>
+            <p className="text-xs text-muted-foreground">
+              Net Profit ({getRangeLabel()})
+            </p>
+            <p
+              className={cn(
+                "text-lg font-bold",
+                netProfit >= 0 ? "text-emerald-600" : "text-red-600",
+              )}
+            >
               KES {netProfit.toLocaleString()}
             </p>
           </div>
@@ -162,39 +191,41 @@ export function CashflowChart({ farmId }: CashflowChartProps) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 11 }} 
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11 }}
                 tickLine={false}
                 interval={timeRange === "year" ? 1 : 0}
               />
-              <YAxis 
-                tick={{ fontSize: 11 }} 
-                tickLine={false} 
-                tickFormatter={(v) => `KES ${v/1000}k`} 
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+                tickFormatter={(v) => `KES ${v / 1000}k`}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey="revenue" 
-                name="Revenue" 
-                stroke="#10b981" 
-                fill="url(#revenueGrad)" 
-                strokeWidth={2} 
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                name="Revenue"
+                stroke="#10b981"
+                fill="url(#revenueGrad)"
+                strokeWidth={2}
               />
-              <Area 
-                type="monotone" 
-                dataKey="costs" 
-                name="Costs" 
-                stroke="#ef4444" 
-                fill="url(#costsGrad)" 
-                strokeWidth={2} 
+              <Area
+                type="monotone"
+                dataKey="costs"
+                name="Costs"
+                stroke="#ef4444"
+                fill="url(#costsGrad)"
+                strokeWidth={2}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
           <div className="h-[280px] flex flex-col items-center justify-center gap-2">
-            <p className="text-sm text-muted-foreground">No data for {getRangeLabel().toLowerCase()}</p>
+            <p className="text-sm text-muted-foreground">
+              No data for {getRangeLabel().toLowerCase()}
+            </p>
             <p className="text-xs text-muted-foreground">
               Try selecting a different time range or add revenue/cost entries
             </p>

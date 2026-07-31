@@ -1,47 +1,63 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  isAuthPath,
+  isProtectedPath,
+} from './lib/api/route-config';
 
-// Routes that require authentication
-const protectedRoutes = [
-  '/dashboard',
-  '/crops',
-  '/livestock',
-  '/ledger',
-  '/advisor',
-  '/profile',
-  '/settings',
-];
-
-// Routes for authenticated users only (redirect to dashboard if already logged in)
-const authRoutes = ['/login', '/signup'];
-
-export async function proxy (request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Check for both tokens
+
   const accessToken = request.cookies.get('access_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
-  const hasAccessToken = !!accessToken;
-  const hasRefreshToken = !!refreshToken;
 
-  // Redirect authenticated users away from auth pages
-  if (hasAccessToken && authRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  const hasAccessToken = Boolean(accessToken);
+  const hasRefreshToken = Boolean(refreshToken);
+
+  const isAuthenticated = hasAccessToken || hasRefreshToken;
+
+  /**
+   * Auth-only pages:
+   *
+   * Logged-in users should not see login/register.
+   */
+  if (isAuthenticated && isAuthPath(pathname)) {
+    return NextResponse.redirect(
+      new URL('/dashboard', request.url),
+    );
   }
 
-  // Protect private routes
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
-  );
+  /**
+   * Protected pages:
+   *
+   * A user needs at least one auth token to access them.
+   *
+   * We intentionally allow the request through when a refresh
+   * token exists. The Axios client can then attempt token refresh.
+   */
+  if (
+    isProtectedPath(pathname) &&
+    !hasAccessToken &&
+    !hasRefreshToken
+  ) {
+    const loginUrl = new URL('/login', request.url);
 
-  // ✅ ONLY redirect if BOTH tokens are missing
-  // If refresh token exists, let the page load and let axios handle refresh
-  if (isProtectedRoute && !hasAccessToken && !hasRefreshToken) {
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(redirectUrl);
+    loginUrl.searchParams.set(
+      'redirect',
+      pathname,
+    );
+
+    return NextResponse.redirect(loginUrl);
   }
 
+  /**
+   * Everything else is public.
+   *
+   * This includes:
+   * /contact
+   * /about
+   * /pricing
+   * /auth/confirmEmail/*
+   */
   return NextResponse.next();
 }
 

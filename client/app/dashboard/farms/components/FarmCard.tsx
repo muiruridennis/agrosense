@@ -35,9 +35,11 @@ interface FarmCardProps {
 }
 
 const roleColors = {
-  owner: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20",
+  owner:
+    "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20",
   manager: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/20",
-  worker: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/20",
+  worker:
+    "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/20",
 };
 
 const roleIcons = {
@@ -50,8 +52,10 @@ const roleIcons = {
 function getRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const diffDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
@@ -60,7 +64,12 @@ function getRelativeTime(dateString: string): string {
   return `${Math.floor(diffDays / 365)} years ago`;
 }
 
-export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProps) {
+export function FarmCard({
+  farm,
+  onEdit,
+  onDelete,
+  onViewDetails,
+}: FarmCardProps) {
   const router = useRouter();
   const role = farm.role || "worker";
   const RoleIcon = roleIcons[role as keyof typeof roleIcons] || "🌾";
@@ -81,7 +90,7 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
         "group relative cursor-pointer overflow-hidden transition-all duration-300",
         "hover:shadow-xl hover:-translate-y-1",
         "border-border/50 bg-gradient-to-br from-card to-muted/5",
-        "animate-fade-in-up"
+        "animate-fade-in-up",
       )}
     >
       {/* Premium gradient overlay on hover */}
@@ -105,7 +114,7 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
               <Badge
                 className={cn(
                   "text-[10px] font-semibold uppercase tracking-wider border",
-                  roleColors[role]
+                  roleColors[role],
                 )}
               >
                 <span className="mr-1">{RoleIcon}</span>
@@ -137,11 +146,19 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem onClick={() => handleAction(e as any, () => router.push(`/dashboard/farms/${farm.id}`))}>
+                <DropdownMenuItem
+                  onClick={() =>
+                    handleAction(e as any, () =>
+                      router.push(`/dashboard/farms/${farm.id}`),
+                    )
+                  }
+                >
                   <Eye className="mr-2 h-4 w-4" />
                   View Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleAction(e as any, () => onEdit(farm))}>
+                <DropdownMenuItem
+                  onClick={() => handleAction(e as any, () => onEdit(farm))}
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit Farm
                 </DropdownMenuItem>
@@ -177,10 +194,15 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
           <div className="rounded-lg bg-muted/30 p-2.5 text-center transition-all group-hover:bg-muted/50">
             <div className="flex items-center justify-center gap-1 text-muted-foreground">
               <Ruler className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Area</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider">
+                Area
+              </span>
             </div>
             <p className="mt-1 text-base font-bold text-foreground">
-              {farm.areaHectares} <span className="text-xs font-normal text-muted-foreground">ha</span>
+              {farm.areaHectares}{" "}
+              <span className="text-xs font-normal text-muted-foreground">
+                ha
+              </span>
             </p>
           </div>
 
@@ -188,7 +210,9 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
           <div className="rounded-lg bg-muted/30 p-2.5 text-center transition-all group-hover:bg-muted/50">
             <div className="flex items-center justify-center gap-1 text-muted-foreground">
               <Sprout className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Plots</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider">
+                Plots
+              </span>
             </div>
             <p className="mt-1 text-base font-bold text-foreground">
               {farm.activePlots ?? "—"}
@@ -199,7 +223,9 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
           <div className="rounded-lg bg-muted/30 p-2.5 text-center transition-all group-hover:bg-muted/50">
             <div className="flex items-center justify-center gap-1 text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Team</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider">
+                Team
+              </span>
             </div>
             <p className="mt-1 text-base font-bold text-foreground">
               {farm.members?.length ?? 0}
@@ -213,7 +239,7 @@ export function FarmCard({ farm, onEdit, onDelete, onViewDetails }: FarmCardProp
             <Calendar className="h-3 w-3" />
             <span>Created {getRelativeTime(farm.createdAt)}</span>
           </div>
-          
+
           <div className="flex items-center gap-1 text-xs font-medium text-primary opacity-70 transition-all group-hover:opacity-100 group-hover:gap-2">
             <span>View Farm</span>
             <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />

@@ -13,6 +13,8 @@ import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly saltRounds = 10;
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -23,7 +25,7 @@ export class UsersService {
     const hashed = await bcrypt.hash(input.password, 12);
 
     const user = this.usersRepository.create({
-      email: input.email ? input.email.toLowerCase().trim() : null,
+      email: input.email,
       phoneNumber: input.phoneNumber.trim(),
       fullName: input.fullName.trim(),
       password: hashed, // hashed, not raw
@@ -43,7 +45,7 @@ export class UsersService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { email: email.toLowerCase().trim() },
     });
@@ -53,17 +55,21 @@ export class UsersService {
     return user;
   }
 
-  async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
+  async findByPhoneNumber(phoneNumber: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { phoneNumber: phoneNumber.trim() },
     });
-    return user || null;
+    if (!user) {
+      throw new NotFoundException(
+        `User with phone number ${phoneNumber} was not found`,
+      );
+    }
+    return user;
   }
 
   async createFromPhone(phoneNumber: string, fullName?: string): Promise<User> {
     const normalizedPhone = phoneNumber.trim();
     const user = this.usersRepository.create({
-      email: null,
       phoneNumber: normalizedPhone,
       fullName: fullName?.trim() || 'Invited user',
       password: null,
@@ -86,6 +92,26 @@ export class UsersService {
     }
   }
 
+  async markEmailAsVerified(email: string) {
+    return this.usersRepository.update(
+      { email },
+      {
+        isEmailVerified: true,
+      },
+    );
+  }
+  async resetPassword(email: string, hashedPassword: string): Promise<void> {
+    const user = await this.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.password = hashedPassword;
+    user.currentHashedRefreshToken = null;
+
+    await this.usersRepository.save(user);
+  }
   async updateLastLogin(userId: string, timestamp: Date): Promise<void> {
     const updateResult = await this.usersRepository.update(
       { id: userId },
@@ -139,5 +165,14 @@ export class UsersService {
     return this.usersRepository.find({
       select: ['id', 'fullName', 'email', 'phoneNumber', 'role', 'createdAt'],
     });
+  }
+  async delete(id: string): Promise<{ message: string }> {
+    const user = await this.getById(id);
+    await this.usersRepository.delete({ id });
+    return { message: `User ${user.fullName} with ID ${id} has been deleted.` };
+  }
+  async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(this.saltRounds);
+    return await bcrypt.hash(password, salt);
   }
 }

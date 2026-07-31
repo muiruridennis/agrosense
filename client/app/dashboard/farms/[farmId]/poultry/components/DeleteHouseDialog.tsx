@@ -24,7 +24,12 @@ interface DeleteHouseDialogProps {
   onSuccess?: () => void;
 }
 
-export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: DeleteHouseDialogProps) {
+export function DeleteHouseDialog({
+  open,
+  onOpenChange,
+  house,
+  onSuccess,
+}: DeleteHouseDialogProps) {
   const [confirmText, setConfirmText] = useState("");
   const deleteHouse = useDeletePoultryHouse();
 
@@ -38,9 +43,11 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
   const isValid = confirmText === "DELETE";
 
   // Check if house has active flocks
-  const hasActiveFlocks = house?.flocks?.some(f => f.status === "active") || false;
+  const hasActiveFlocks =
+    house?.flocks?.some((f) => f.status === "active") || false;
   const hasFlocks = (house?.flocks?.length || 0) > 0;
-  const totalBirds = house?.flocks?.reduce((sum, f) => sum + f.currentCount, 0) || 0;
+  const totalBirds =
+    house?.flocks?.reduce((sum, f) => sum + f.currentCount, 0) || 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,11 +57,14 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
             <div className="rounded-full bg-destructive/10 p-2.5">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
-            <DialogTitle className="text-destructive">Delete Poultry House</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Delete Poultry House
+            </DialogTitle>
           </div>
           <DialogDescription className="pt-3 text-muted-foreground">
             This action cannot be undone. This will permanently delete{" "}
-            <span className="font-semibold text-foreground">{house?.name}</span> and all associated data.
+            <span className="font-semibold text-foreground">{house?.name}</span>{" "}
+            and all associated data.
           </DialogDescription>
         </DialogHeader>
 
@@ -67,15 +77,23 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
                   Cannot delete house with active flocks
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  This house has active flocks that must be closed or moved first.
+                  This house has active flocks that must be closed or moved
+                  first.
                 </p>
                 <ul className="mt-3 space-y-1.5">
-                  {house.flocks?.filter(f => f.status === "active").map(f => (
-                    <li key={f.id} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{f.breed}</span>
-                      <span className="text-muted-foreground">{f.currentCount} birds</span>
-                    </li>
-                  ))}
+                  {house.flocks
+                    ?.filter((f) => f.status === "active")
+                    .map((f) => (
+                      <li
+                        key={f.id}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-foreground">{f.breed}</span>
+                        <span className="text-muted-foreground">
+                          {f.currentCount} birds
+                        </span>
+                      </li>
+                    ))}
                 </ul>
               </div>
             </div>
@@ -89,7 +107,8 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
                   This house has {house.flocks?.length} closed flock(s)
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Total of {totalBirds.toLocaleString()} birds. All flock data will be permanently deleted.
+                  Total of {totalBirds.toLocaleString()} birds. All flock data
+                  will be permanently deleted.
                 </p>
               </div>
             </div>
@@ -111,7 +130,9 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
           <>
             <div className="space-y-3 pt-2">
               <p className="text-sm text-muted-foreground">
-                Type <span className="font-semibold text-destructive">DELETE</span> to confirm permanent deletion.
+                Type{" "}
+                <span className="font-semibold text-destructive">DELETE</span>{" "}
+                to confirm permanent deletion.
               </p>
               <Input
                 placeholder="DELETE"
@@ -119,7 +140,9 @@ export function DeleteHouseDialog({ open, onOpenChange, house, onSuccess }: Dele
                 onChange={(e) => setConfirmText(e.target.value)}
                 className={cn(
                   "font-mono",
-                  confirmText && confirmText !== "DELETE" && "border-destructive/50 focus-visible:ring-destructive"
+                  confirmText &&
+                    confirmText !== "DELETE" &&
+                    "border-destructive/50 focus-visible:ring-destructive",
                 )}
               />
             </div>

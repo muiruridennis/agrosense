@@ -5,7 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, CheckCircle2, AlertCircle, Package, DollarSign } from "lucide-react";
+import {
+  Activity,
+  CheckCircle2,
+  AlertCircle,
+  Package,
+  DollarSign,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +20,26 @@ interface FarmRecentActivityProps {
 }
 
 const activityConfig = {
-  task_completed: { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
-  alert_raised: { icon: AlertCircle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30" },
-  inventory_updated: { icon: Package, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30" },
-  transaction: { icon: DollarSign, color: "text-teal-500", bg: "bg-teal-50 dark:bg-teal-950/30" },
+  task_completed: {
+    icon: CheckCircle2,
+    color: "text-emerald-500",
+    bg: "bg-emerald-50 dark:bg-emerald-950/30",
+  },
+  alert_raised: {
+    icon: AlertCircle,
+    color: "text-amber-500",
+    bg: "bg-amber-50 dark:bg-amber-950/30",
+  },
+  inventory_updated: {
+    icon: Package,
+    color: "text-blue-500",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+  },
+  transaction: {
+    icon: DollarSign,
+    color: "text-teal-500",
+    bg: "bg-teal-50 dark:bg-teal-950/30",
+  },
 };
 
 export function FarmRecentActivity({ farmId }: FarmRecentActivityProps) {
@@ -36,7 +58,9 @@ export function FarmRecentActivity({ farmId }: FarmRecentActivityProps) {
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
+          <CardTitle className="text-base font-medium">
+            Recent Activity
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
@@ -57,7 +81,9 @@ export function FarmRecentActivity({ farmId }: FarmRecentActivityProps) {
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
+          <CardTitle className="text-base font-medium">
+            Recent Activity
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center gap-2 py-8 text-center">
@@ -76,9 +102,13 @@ export function FarmRecentActivity({ farmId }: FarmRecentActivityProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {activities.map((activity: any) => {
-          const config = activityConfig[activity.type as keyof typeof activityConfig] || activityConfig.task_completed;
+          const config =
+            activityConfig[activity.type as keyof typeof activityConfig] ||
+            activityConfig.task_completed;
           const Icon = config.icon;
-          const timeAgo = formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true });
+          const timeAgo = formatDistanceToNow(new Date(activity.createdAt), {
+            addSuffix: true,
+          });
 
           return (
             <div key={activity.id} className="flex items-start gap-3">
@@ -88,9 +118,14 @@ export function FarmRecentActivity({ farmId }: FarmRecentActivityProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm">
                   <span className="font-medium">{activity.userName}</span>
-                  <span className="text-muted-foreground"> {activity.description}</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    {activity.description}
+                  </span>
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">{timeAgo}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {timeAgo}
+                </p>
               </div>
             </div>
           );

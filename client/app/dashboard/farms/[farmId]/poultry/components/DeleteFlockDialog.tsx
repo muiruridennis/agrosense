@@ -25,7 +25,13 @@ interface DeleteFlockDialogProps {
   onSuccess?: () => void;
 }
 
-export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSuccess }: DeleteFlockDialogProps) {
+export function DeleteFlockDialog({
+  open,
+  onOpenChange,
+  flock,
+  houseName,
+  onSuccess,
+}: DeleteFlockDialogProps) {
   const [confirmText, setConfirmText] = useState("");
   const deleteFlock = useDeleteFlock();
 
@@ -53,7 +59,10 @@ export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSucc
           </div>
           <DialogDescription className="pt-3 text-muted-foreground">
             This action cannot be undone. This will permanently delete{" "}
-            <span className="font-semibold text-foreground">{flock?.breed}</span> from{" "}
+            <span className="font-semibold text-foreground">
+              {flock?.breed}
+            </span>{" "}
+            from{" "}
             <span className="font-semibold text-foreground">{houseName}</span>.
           </DialogDescription>
         </DialogHeader>
@@ -67,12 +76,16 @@ export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSucc
                   Cannot delete active flock
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  This flock is currently <span className="font-semibold text-warning">ACTIVE</span>. 
+                  This flock is currently{" "}
+                  <span className="font-semibold text-warning">ACTIVE</span>.
                   You must close the flock before deleting it.
                 </p>
                 <div className="mt-3 rounded-md bg-muted/30 p-2 text-sm">
-                  <span className="text-muted-foreground">Current birds:</span>{""}
-                  <span className="ml-2 font-semibold text-foreground">{flock.currentCount.toLocaleString()}</span>
+                  <span className="text-muted-foreground">Current birds:</span>
+                  {""}
+                  <span className="ml-2 font-semibold text-foreground">
+                    {flock.currentCount.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -86,7 +99,8 @@ export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSucc
                   This flock has {flock.records?.length} record(s)
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  All daily records, mortality data, and sales history will be permanently deleted.
+                  All daily records, mortality data, and sales history will be
+                  permanently deleted.
                 </p>
               </div>
             </div>
@@ -108,7 +122,9 @@ export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSucc
           <>
             <div className="space-y-3 pt-2">
               <p className="text-sm text-muted-foreground">
-                Type <span className="font-semibold text-destructive">DELETE</span> to confirm permanent deletion.
+                Type{" "}
+                <span className="font-semibold text-destructive">DELETE</span>{" "}
+                to confirm permanent deletion.
               </p>
               <Input
                 placeholder="DELETE"
@@ -116,7 +132,9 @@ export function DeleteFlockDialog({ open, onOpenChange, flock, houseName, onSucc
                 onChange={(e) => setConfirmText(e.target.value)}
                 className={cn(
                   "font-mono",
-                  confirmText && confirmText !== "DELETE" && "border-destructive/50 focus-visible:ring-destructive"
+                  confirmText &&
+                    confirmText !== "DELETE" &&
+                    "border-destructive/50 focus-visible:ring-destructive",
                 )}
               />
             </div>

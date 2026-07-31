@@ -27,7 +27,7 @@ export type GeoPoint = { type: 'Point'; coordinates: [number, number] };
 export type GeoPolygon = { type: 'Polygon'; coordinates: number[][][] };
 
 @Entity('farms')
-@Unique(['ownerId', 'name']) // ✅ One farm name per owner
+@Unique(['ownerId', 'name']) 
 export class Farm extends BaseEntity {
   @Column({ type: 'varchar' })
   name!: string;

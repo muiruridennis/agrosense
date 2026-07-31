@@ -20,8 +20,8 @@ interface InventoryStatusProps {
 export function InventoryStatus({ items, isLoading }: InventoryStatusProps) {
   if (isLoading) return <ChartSkeleton />;
 
-  const critical = items.filter(i => i.status === "CRITICAL");
-  const low = items.filter(i => i.status === "LOW");
+  const critical = items.filter((i) => i.status === "CRITICAL");
+  const low = items.filter((i) => i.status === "LOW");
 
   return (
     <Card className="p-4">
@@ -37,22 +37,36 @@ export function InventoryStatus({ items, isLoading }: InventoryStatusProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {critical.map(item => (
-            <div key={item.name} className="flex items-center justify-between border-b border-red-100 pb-2">
+          {critical.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between border-b border-red-100 pb-2"
+            >
               <div>
                 <p className="text-sm font-medium">{item.name}</p>
-                <p className="text-xs text-red-600">CRITICAL - Order immediately</p>
+                <p className="text-xs text-red-600">
+                  CRITICAL - Order immediately
+                </p>
               </div>
-              <p className="text-sm font-bold text-red-600">{item.daysSupply === 0 ? "OUT" : `${item.daysSupply}d`}</p>
+              <p className="text-sm font-bold text-red-600">
+                {item.daysSupply === 0 ? "OUT" : `${item.daysSupply}d`}
+              </p>
             </div>
           ))}
-          {low.map(item => (
-            <div key={item.name} className="flex items-center justify-between border-b border-amber-100 pb-2">
+          {low.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between border-b border-amber-100 pb-2"
+            >
               <div>
                 <p className="text-sm font-medium">{item.name}</p>
-                <p className="text-xs text-amber-600">Low stock - Reorder soon</p>
+                <p className="text-xs text-amber-600">
+                  Low stock - Reorder soon
+                </p>
               </div>
-              <p className="text-sm font-medium text-amber-600">{item.daysSupply}d left</p>
+              <p className="text-sm font-medium text-amber-600">
+                {item.daysSupply}d left
+              </p>
             </div>
           ))}
         </div>

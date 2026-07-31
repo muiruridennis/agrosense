@@ -4,43 +4,57 @@ import { FlockRecord } from './flock-record.entity';
 import { BaseEntity } from '../../common/entities/base.entity';
 
 export enum FlockType {
-  LAYERS = 'layers', // egg production
-  BROILERS = 'broilers', // meat production
+  LAYERS = 'layers',
+  BROILERS = 'broilers',
   UNKNOWN = 'unknown',
   KIENYEJI = 'kienyeji',
 }
 
 export enum FlockStatus {
-  ACTIVE = 'active', // currently running
-  CLOSED = 'closed', // sold/depleted — house ready for next batch
-  SUSPENDED = 'suspended', // paused (disease outbreak etc.)
+  ACTIVE = 'active',
+  CLOSED = 'closed',
+  SUSPENDED = 'suspended',
 }
 
-/**
- * FLOCK STAGE — Full lifecycle progression
- * Automatically assigned based on age and type
- */
 export enum FlockStage {
-  PLACED = 'placed', // Just arrived, not yet in brooding house
-  BROODING = 'brooding', // First 2-3 weeks — critical heat/care period
-  GROWING = 'growing', // Mid-period growth (weeks 2-6 broilers, 2-12 layers)
-  LAYING_PEAK = 'laying_peak', // Layers at peak production (weeks 24-50)
-  LAYING_DECLINE = 'laying_decline', // Layers declining production (weeks 50+)
-  HARVEST_READY = 'harvest_ready', // Broilers ready for slaughter (week 6+)
-  DEPLETED = 'depleted', // Production too low to continue economically
-  CLOSED = 'closed', // Flock officially ended
+  PLACED = 'placed',
+  BROODING = 'brooding',
+  GROWING = 'growing',
+  LAYING_PEAK = 'laying_peak',
+  LAYING_DECLINE = 'laying_decline',
+  HARVEST_READY = 'harvest_ready',
+  DEPLETED = 'depleted',
+  CLOSED = 'closed',
 }
 
 /**
- * Flock — a batch of birds placed in a house on a specific date.
- * When birds are sold/depleted, status → CLOSED and a new flock starts.
- * This gives full history per house + comprehensive business metrics.
+ * Economic assumptions — set once at flock creation, used consistently
+ * across every KPI/financial calculation for THIS flock's lifetime.
+ *
+ * Previously: 4 KES/egg, 35 KES/kg feed, 250 KES/kg meat, 800 KES/bird
+ * mortality cost were hardcoded as magic numbers in two different service
+ * methods (calculateRecordKPIs and generateClosureReport) with no shared
+ * source of truth. A market price change required a code deploy.
+ *
+ * Now: stored per-flock so historical flocks retain the prices that were
+ * actually true when they ran, while new flocks can use updated defaults.
  */
+export interface EconomicAssumptions {
+  feedCostPerKg: number;
+  eggPriceKesPerTray: number;
+  broilerPricePerKg: number;
+  mortalityCostPerBird: number;
+  dayOldChickWeightKg: number;
+}
+
+/** System-wide defaults — used only when a flock has no override set */
+
+
 @Entity('flocks')
 export class Flock extends BaseEntity {
   @Column({ type: 'uuid' })
   houseId!: string;
-  
+
   @Column({ type: 'varchar', length: 100, nullable: true })
   name!: string | null;
 
@@ -60,10 +74,6 @@ export class Flock extends BaseEntity {
   })
   status!: FlockStatus;
 
-  /**
-   * LIFECYCLE STAGE — Auto-assigned based on age + flock type
-   * Automatically transitions as flock ages
-   */
   @Column({
     type: 'enum',
     enum: FlockStage,
@@ -71,99 +81,125 @@ export class Flock extends BaseEntity {
   })
   currentStage!: FlockStage;
 
-  /** Bird breed e.g "Kenbro", "Ross 308", "Sasso", "ISA Brown" */
   @Column({ type: 'varchar', length: 100 })
   breed!: string;
 
-  /** Number of birds placed on placement date */
   @Column({ type: 'int' })
   initialCount!: number;
 
-  /** Live birds today — decremented by mortality + culls in each record */
   @Column({ type: 'int' })
   currentCount!: number;
 
-  /** Date chicks/pullets arrived */
   @Column({ type: 'date' })
   placementDate!: Date;
 
-  /** Age at placement in weeks (0 = day-old chicks) */
   @Column({ type: 'int', default: 0 })
   ageAtPlacementWeeks!: number;
 
   // ── Broiler-specific targets ──────────────────────────────────────────────
 
-  /** Target live weight at slaughter (kg) — broilers only */
   @Column({ type: 'float', nullable: true })
   targetWeightKg!: number | null;
 
-  /** Target days to market — broilers only */
   @Column({ type: 'int', nullable: true })
   targetDays!: number | null;
 
   // ── Layers-specific ───────────────────────────────────────────────────────
 
-  /** Age when production started (weeks) — layers only */
   @Column({ type: 'int', nullable: true })
   productionStartWeek!: number | null;
 
-  // ── PERFORMANCE BENCHMARKS (Initialized at flock creation) ────────────────
+  // ── PERFORMANCE BENCHMARKS (set at creation, compared against at closure) ──
 
-  /** Expected mortality % based on breed */
   @Column({ type: 'float', nullable: true })
   expectedMortalityPercent!: number | null;
 
-  /** Expected daily feed per bird (grams) */
   @Column({ type: 'float', nullable: true })
   expectedDailyFeedPerBirdGrams!: number | null;
 
-  /** Profitability target (KES) */
   @Column({ type: 'float', nullable: true })
   breakEvenTarget!: number | null;
 
+  /**
+   * Per-flock economic assumptions override. NULL means "use system
+   * defaults at calculation time" — see PricingService.getAssumptions().
+   * Stored as jsonb so historical flocks keep the exact prices that
+   * were true when they were placed, even if defaults change later.
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  economicAssumptions!: EconomicAssumptions | null;
+
   // ── CUMULATIVE FINANCIAL METRICS ──────────────────────────────────────────
 
-  /** Total feed cost incurred (KES) */
   @Column({ type: 'float', default: 0 })
   feedCostTotal!: number;
 
-  /** Total revenue from eggs or meat sales (KES) */
   @Column({ type: 'float', default: 0 })
   revenueTotal!: number;
 
-  /** Net profit = revenueTotal - feedCostTotal (KES) */
   @Column({ type: 'float', default: 0 })
   netProfit!: number;
 
-  /** ROI % = (netProfit / feedCostTotal) * 100 */
   @Column({ type: 'float', default: 0 })
   roiPercent!: number;
 
   // ── CLOSURE METRICS ───────────────────────────────────────────────────────
 
-  /** When flock was officially closed */
   @Column({ type: 'timestamptz', nullable: true })
   closedAt!: Date | null;
 
-  /** Reason for closure (harvest, disease, economic) */
   @Column({ type: 'varchar', length: 200, nullable: true })
   depletionReason!: string | null;
 
-  /** Final mortality % at closure */
   @Column({ type: 'float', nullable: true })
   finalMortalityPercent!: number | null;
 
-  /** Final FCR at closure (broilers) */
+  /**
+   * Final culling % at closure — separated from mortality.
+   * NEW field: previously culls and mortality were always summed together,
+   * which hid whether losses were disease-driven (mortality) or a
+   * deliberate management decision (culling weak/sick birds).
+   */
+  @Column({ type: 'float', nullable: true })
+  finalCullingPercent!: number | null;
+
+  /** Broilers only — see PoultryService.calculateFCR() for the fixed formula */
   @Column({ type: 'float', nullable: true })
   feedConversionRatio!: number | null;
 
+  /**
+   * Layers/kienyeji — feed kg consumed per dozen eggs produced.
+   * NEW field: the layer-equivalent of FCR. Previously layers had no
+   * feed-efficiency metric at all.
+   */
+  @Column({ type: 'float', nullable: true })
+  feedPerDozenEggs!: number | null;
+
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
+
   @Column({ type: 'jsonb', nullable: true })
   sales!: {
     buyer: string;
     quantity: number;
     pricePerBird: number;
+    totalAmount: number;
+    saleDate: Date;
+    receiptNumber?: string;
+    paymentStatus: 'pending' | 'paid' | 'partial';
+    notes?: string;
+  }[];
+
+  /**
+   * Egg sales — NEW. Previously there was no transactional record of egg
+   * sales at all; egg revenue was only ever an automatic daily KPI
+   * side-effect with no buyer, receipt, or payment status tracking.
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  eggSales!: {
+    buyer: string;
+    trays: number;
+    pricePerTray: number;
     totalAmount: number;
     saleDate: Date;
     receiptNumber?: string;

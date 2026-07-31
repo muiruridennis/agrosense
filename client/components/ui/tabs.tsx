@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Tabs as TabsPrimitive } from "radix-ui"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Tabs as TabsPrimitive } from "radix-ui";
+import { cn } from "@/lib/utils";
 
 function Tabs({
   className,
@@ -19,11 +19,11 @@ function Tabs({
         // ✅ Fix: use data-orientation attribute
         "data-[orientation=horizontal]:flex-col",
         "data-[orientation=vertical]:flex-row",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 const tabsListVariants = cva(
@@ -38,8 +38,8 @@ const tabsListVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
-)
+  },
+);
 
 function TabsList({
   className,
@@ -55,11 +55,11 @@ function TabsList({
         tabsListVariants({ variant }),
         // ✅ Fix: adjust for orientation
         "group-data-[orientation=horizontal]/tabs:flex-row group-data-[orientation=vertical]/tabs:flex-col",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TabsTrigger({
@@ -85,11 +85,11 @@ function TabsTrigger({
         "group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5",
         "group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function TabsContent({
@@ -103,11 +103,11 @@ function TabsContent({
         "flex-1 text-sm outline-none",
         // ✅ Fix: ensure content takes full width
         "w-full",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants };

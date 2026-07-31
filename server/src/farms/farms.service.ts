@@ -34,7 +34,6 @@ export class FarmsService {
 
     try {
       const owner = await this.usersService.getById(ownerId);
-      console.log('Creating farm for owner:', owner); // Debug log
 
       const farm = queryRunner.manager.create(Farm, {
         ...dto,
@@ -97,6 +96,15 @@ export class FarmsService {
     });
     if (!farm) throw new NotFoundException(`Farm ${id} not found`);
     if (farm.ownerId !== ownerId) throw new ForbiddenException();
+    return farm;
+  }
+
+  async findOneById(id: string): Promise<Farm> {
+    const farm = await this.farmRepository.findOne({
+      where: { id },
+      relations: ['plots', 'members', 'stockItems', 'cows', 'poultryHouses', 'ruminants'],
+    });
+    if (!farm) throw new NotFoundException(`Farm ${id} not found`);
     return farm;
   }
 

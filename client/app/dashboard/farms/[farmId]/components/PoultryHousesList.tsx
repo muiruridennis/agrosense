@@ -33,7 +33,8 @@ export function PoultryHousesList({ houses, farmId }: PoultryHousesListProps) {
           <div>
             <h3 className="font-semibold text-foreground">Poultry Houses</h3>
             <p className="text-xs text-muted-foreground">
-              {houses.filter(h => h.isActive).length} active houses · {totalCapacity.toLocaleString()} bird capacity
+              {houses.filter((h) => h.isActive).length} active houses ·{" "}
+              {totalCapacity.toLocaleString()} bird capacity
             </p>
           </div>
         </div>
@@ -47,37 +48,49 @@ export function PoultryHousesList({ houses, farmId }: PoultryHousesListProps) {
         {houses.map((house) => (
           <button
             key={house.id}
-            onClick={() => router.push(`/dashboard/farms/${farmId}/poultry/houses/${house.id}`)}
+            onClick={() =>
+              router.push(
+                `/dashboard/farms/${farmId}/poultry/houses/${house.id}`,
+              )
+            }
             className="group flex w-full items-center gap-4 px-5 py-4 text-left transition-all hover:bg-muted/30"
           >
-            <div className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold",
-              house.isActive
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                : "bg-muted text-muted-foreground",
-            )}>
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold",
+                house.isActive
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
               {house.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-medium text-foreground">{house.name}</p>
-                <span className={cn(
-                  "rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase",
-                  house.isActive
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                    : "bg-muted text-muted-foreground",
-                )}>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase",
+                    house.isActive
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
                   {house.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="capitalize">{house.houseType?.replace("_", " ")}</span>
+                <span className="capitalize">
+                  {house.houseType?.replace("_", " ")}
+                </span>
                 <span>•</span>
                 <span>Capacity: {house.capacity.toLocaleString()} birds</span>
                 {house.notes && (
                   <>
                     <span>•</span>
-                    <span className="truncate max-w-[200px]">{house.notes}</span>
+                    <span className="truncate max-w-[200px]">
+                      {house.notes}
+                    </span>
                   </>
                 )}
               </div>

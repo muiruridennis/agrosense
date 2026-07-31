@@ -1,18 +1,18 @@
-// app/dashboard/farms/[farmId]/poultry/components/FlockActionsCard.tsx
 "use client";
 
 import { useState } from "react";
 import { Plus, ClipboardList, Package, TrendingUp, FileText, Syringe, Wheat, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { Flock } from "../types";
 import { RecordForm } from "../../../components/RecordForm";
+import { FarmMemberRole , Flock} from "@/types";
 
 interface FlockActionsCardProps {
   flock: Flock;
+  role?: FarmMemberRole;
 }
 
-export function FlockActionsCard({ flock }: FlockActionsCardProps) {
+export function FlockActionsCard({ flock, role }: FlockActionsCardProps) {
   const [recordFormOpen, setRecordFormOpen] = useState(false);
   const isActive = flock.status === "active";
 

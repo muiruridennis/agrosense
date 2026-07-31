@@ -14,9 +14,10 @@ export interface ApiResponse<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ApiResponse<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   private readonly sensitiveFields = [
     'password',
     'currentHashedRefreshToken',
@@ -38,8 +39,14 @@ export class TransformInterceptor<T>
   }
 
   private sanitize(data: any): any {
+    // Handle primitives and null/undefined
     if (data === null || data === undefined) return data;
     if (typeof data !== 'object') return data;
+
+    // Handle Date objects
+    if (data instanceof Date) {
+      return data.toISOString();
+    }
 
     // Handle arrays
     if (Array.isArray(data)) {
@@ -58,7 +65,12 @@ export class TransformInterceptor<T>
     Object.keys(sanitized).forEach((key) => {
       const value = sanitized[key];
       if (value && typeof value === 'object') {
-        sanitized[key] = this.sanitize(value);
+        // Handle Date objects before recursing
+        if (value instanceof Date) {
+          sanitized[key] = value.toISOString();
+        } else {
+          sanitized[key] = this.sanitize(value);
+        }
       }
     });
 

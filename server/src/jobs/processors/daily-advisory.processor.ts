@@ -5,20 +5,18 @@ import { Repository } from 'typeorm';
 import type { Job } from 'bull';
 import { Farm } from '../../farms/entities/farm.entity';
 import { RecommendationsService } from '../../recommendations/recommendations.service';
-import { NotificationsService } from '../../notifications/notifications.service';
+import { NotificationService } from '../../notifications/notifications.service';
 import { DairyService } from '../../dairy/dairy.service';
 import { SmallRuminantsService } from '../../smallruminants/smallruminants.service';
 import { PoultryService } from '../../poultry/poultry.service';
 import { Flock } from '../../poultry/entities/flock.entity';
-import { NotificationChannel } from '../../notifications/entities/notification.entity';
+import { NotificationChannel } from '../../notifications/enums';
 import { DiseaseSeverity } from '../../disease-engine/entities/disease-rule.entity';
 import { DiseaseEngineService } from '../../disease-engine/disease-engine.service';
 import { CropCyclesService } from '../../crops/crops.service';
+import { ADVISORY_QUEUE, DAILY_ADVISORY_JOB, WEATHER_ADVISORIES_JOB } from '../jobs.constants';
 
-export const ADVISORY_QUEUE = 'advisory';
-export const DAILY_ADVISORY_JOB = 'daily-advisory';
-// export const MARK_OVERDUE_VACCINATIONS_JOB = 'mark-overdue-vaccinations'; // Removed as LivestockService is gone
-export const WEATHER_ADVISORIES_JOB = 'weather-advisories';
+
 
 @Processor(ADVISORY_QUEUE)
 export class DailyAdvisoryProcessor {
@@ -29,7 +27,7 @@ export class DailyAdvisoryProcessor {
     private readonly farmRepo: Repository<Farm>,
     private readonly diseaseEngineService: DiseaseEngineService,
     private readonly recommendationsService: RecommendationsService,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationsService: NotificationService,
     private readonly cropCyclesService: CropCyclesService,
     private readonly dairyService: DairyService,
     private readonly smallRuminantsService: SmallRuminantsService,
@@ -98,8 +96,9 @@ export class DailyAdvisoryProcessor {
             alert.severity === DiseaseSeverity.HIGH ||
             alert.severity === DiseaseSeverity.CRITICAL
           ) {
-            await this.notificationsService.send({
-              user: farm.owner,
+            await this.notificationsService.send(farm.ownerId,{
+              
+              farmId: farm.id,
               title: `Alert: ${alert.diseaseName}`,
               body:
                 rec.actions?.slice(0, 2).join('. ') ??
@@ -113,29 +112,33 @@ export class DailyAdvisoryProcessor {
             });
           } else {
             // Lower severity — in-app only
-            await this.notificationsService.send({
-              user: farm.owner,
+            await this.notificationsService.send(farm.ownerId,{
+              farmId: farm.id,
               title: `Advisory: ${alert.diseaseName}`,
-              body: rec.message.slice(0, 160),
+              body:
+                rec.actions?.slice(0, 2).join('. ') ??
+                rec.message.slice(0, 120),
               channels: [NotificationChannel.IN_APP],
-              data: { farmId: farm.id, alertId: alert.id },
+              data: {
+                farmId: farm.id,
+                alertId: alert.id,
+                type: 'advisory',
+              },
             });
           }
         }
-
-        processed++;
-      } catch (err: any) {
+      } catch (error) {
         this.logger.error(
-          `Failed advisory for farm ${farm.id}: ${err?.message}`,
+          `Failed to process advisory for farm ${farm.id}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+
+      processed++;
     }
 
     this.logger.log(
-      `Daily advisory complete — ${processed} farms, ${alertsCreated} alerts created`,
+      `Completed daily advisory job. ${alertsCreated} alerts created across ${farms.length} farm(s)`,
     );
-
-    return { processed, alertsCreated };
   }
 
   /**

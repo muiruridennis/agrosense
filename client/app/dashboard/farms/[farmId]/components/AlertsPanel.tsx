@@ -70,8 +70,13 @@ export function AlertsPanel({ issues }: AlertsPanelProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-foreground">{issue.title}</p>
-                  <Badge variant={config.badge as any} className="text-[9px] uppercase">
+                  <p className="text-sm font-semibold text-foreground">
+                    {issue.title}
+                  </p>
+                  <Badge
+                    variant={config.badge as any}
+                    className="text-[9px] uppercase"
+                  >
                     {issue.severity}
                   </Badge>
                 </div>

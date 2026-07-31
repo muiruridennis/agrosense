@@ -7,12 +7,14 @@ import { PoultryService } from './poultry.service';
 import { PoultryController } from './poultry.controller';
 import { FarmsModule } from '../farms/farms.module';
 import { FarmMembersModule } from '../farm-members/farm-members.module';
+import { PricingModule } from '../pricing/pricing.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PoultryHouse, Flock, FlockRecord]),
     FarmsModule,
-    FarmMembersModule
+    FarmMembersModule,
+    PricingModule
   ],
   controllers: [PoultryController],
   providers: [PoultryService],

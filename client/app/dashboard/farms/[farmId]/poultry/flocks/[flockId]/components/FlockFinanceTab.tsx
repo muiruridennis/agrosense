@@ -3,7 +3,15 @@
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, DollarSign, Wheat, Egg, Package, Calendar } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wheat,
+  Egg,
+  Package,
+  Calendar,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Flock } from "../types";
 
@@ -21,8 +29,11 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
   // Calculate daily averages
   const placementDate = new Date(flock.placementDate);
   const today = new Date();
-  const daysInProduction = Math.floor((today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24)) || 1;
-  
+  const daysInProduction =
+    Math.floor(
+      (today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24),
+    ) || 1;
+
   const avgDailyCost = totalCost / daysInProduction;
   const avgDailyRevenue = totalRevenue / daysInProduction;
   const projectedTotalCost = avgDailyCost * (flock.targetDays || 42);
@@ -45,7 +56,9 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
                 {flock.type === "layers" ? "Egg Sales" : "Meat Sales"}
               </span>
             </div>
-            <span className="font-semibold">KES {totalRevenue.toLocaleString()}</span>
+            <span className="font-semibold">
+              KES {totalRevenue.toLocaleString()}
+            </span>
           </div>
           {totalRevenue === 0 && (
             <p className="text-xs text-muted-foreground text-center pt-2">
@@ -64,7 +77,9 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
               <Wheat className="h-4 w-4 text-amber-500" />
               <span className="text-sm">Feed Cost</span>
             </div>
-            <span className="font-semibold text-rose-600">KES {totalCost.toLocaleString()}</span>
+            <span className="font-semibold text-rose-600">
+              KES {totalCost.toLocaleString()}
+            </span>
           </div>
           <Progress value={100} className="h-1.5" />
           <p className="text-xs text-muted-foreground">
@@ -79,11 +94,15 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground">Avg Daily Cost</p>
-            <p className="text-lg font-bold text-rose-600">KES {avgDailyCost.toFixed(0)}</p>
+            <p className="text-lg font-bold text-rose-600">
+              KES {avgDailyCost.toFixed(0)}
+            </p>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground">Avg Daily Revenue</p>
-            <p className="text-lg font-bold text-emerald-600">KES {avgDailyRevenue.toFixed(0)}</p>
+            <p className="text-lg font-bold text-emerald-600">
+              KES {avgDailyRevenue.toFixed(0)}
+            </p>
           </div>
         </div>
       </Card>
@@ -95,21 +114,30 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Projected Total Cost</span>
-                <span className="font-semibold">KES {projectedTotalCost.toFixed(0)}</span>
+                <span className="text-muted-foreground">
+                  Projected Total Cost
+                </span>
+                <span className="font-semibold">
+                  KES {projectedTotalCost.toFixed(0)}
+                </span>
               </div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted-foreground">Projected Profit</span>
-                <span className={cn(
-                  "font-semibold",
-                  projectedProfit > 0 ? "text-emerald-600" : "text-rose-600"
-                )}>
+                <span
+                  className={cn(
+                    "font-semibold",
+                    projectedProfit > 0 ? "text-emerald-600" : "text-rose-600",
+                  )}
+                >
                   KES {projectedProfit.toFixed(0)}
                 </span>
               </div>
             </div>
-            <Progress 
-              value={Math.min(100, (daysInProduction / (flock.targetDays || 42)) * 100)} 
+            <Progress
+              value={Math.min(
+                100,
+                (daysInProduction / (flock.targetDays || 42)) * 100,
+              )}
               className="h-1.5"
             />
             <p className="text-xs text-muted-foreground text-center">
@@ -120,24 +148,29 @@ export function FlockFinanceTab({ flock }: FlockFinanceTabProps) {
       )}
 
       {/* Profitability Insight */}
-      <Card className={cn(
-        "p-4",
-        isProfitable ? "border-emerald-200 bg-emerald-50/30" : "border-rose-200 bg-rose-50/30"
-      )}>
+      <Card
+        className={cn(
+          "p-4",
+          isProfitable
+            ? "border-emerald-200 bg-emerald-50/30"
+            : "border-rose-200 bg-rose-50/30",
+        )}
+      >
         <div className="flex items-center gap-2">
           {isProfitable ? (
             <TrendingUp className="h-5 w-5 text-emerald-600" />
           ) : (
             <TrendingDown className="h-5 w-5 text-rose-600" />
           )}
-          <p className={cn(
-            "text-sm font-medium",
-            isProfitable ? "text-emerald-700" : "text-rose-700"
-          )}>
-            {isProfitable 
+          <p
+            className={cn(
+              "text-sm font-medium",
+              isProfitable ? "text-emerald-700" : "text-rose-700",
+            )}
+          >
+            {isProfitable
               ? `This flock is profitable with a ${roiPercent.toFixed(0)}% ROI`
-              : `This flock is currently operating at a loss`
-            }
+              : `This flock is currently operating at a loss`}
           </p>
         </div>
       </Card>

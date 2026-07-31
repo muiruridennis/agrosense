@@ -2,7 +2,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Users, ChevronRight, UserPlus, Crown, Shield, User } from "lucide-react";
+import {
+  Users,
+  ChevronRight,
+  UserPlus,
+  Crown,
+  Shield,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +23,8 @@ interface TeamPanelProps {
 const ROLE_CONFIG = {
   owner: {
     icon: Crown,
-    style: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    style:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     label: "Owner",
   },
   manager: {
@@ -26,7 +34,8 @@ const ROLE_CONFIG = {
   },
   worker: {
     icon: User,
-    style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    style:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     label: "Worker",
   },
 };
@@ -63,20 +72,31 @@ export function TeamPanel({ members, farmId }: TeamPanelProps) {
 
       <div className="divide-y">
         {active.map((member) => {
-          const RoleIcon = ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.icon || User;
-          const roleStyle = ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.style || ROLE_CONFIG.worker.style;
-          const roleLabel = ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.label || member.role;
+          const RoleIcon =
+            ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.icon || User;
+          const roleStyle =
+            ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.style ||
+            ROLE_CONFIG.worker.style;
+          const roleLabel =
+            ROLE_CONFIG[member.role as keyof typeof ROLE_CONFIG]?.label ||
+            member.role;
 
           const joined = new Date(member.joinedAt);
-          const sinceDays = Math.floor((Date.now() - joined.getTime()) / 86_400_000);
-          const since = sinceDays < 30
-            ? `${sinceDays} days ago`
-            : sinceDays < 365
-              ? `${Math.floor(sinceDays / 30)} months ago`
-              : `${Math.floor(sinceDays / 365)} years ago`;
+          const sinceDays = Math.floor(
+            (Date.now() - joined.getTime()) / 86_400_000,
+          );
+          const since =
+            sinceDays < 30
+              ? `${sinceDays} days ago`
+              : sinceDays < 365
+                ? `${Math.floor(sinceDays / 30)} months ago`
+                : `${Math.floor(sinceDays / 365)} years ago`;
 
           return (
-            <div key={member.id} className="flex items-center gap-4 px-5 py-3.5 transition-all hover:bg-muted/30">
+            <div
+              key={member.id}
+              className="flex items-center gap-4 px-5 py-3.5 transition-all hover:bg-muted/30"
+            >
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-semibold">
                   {member.userId.slice(0, 2).toUpperCase()}
@@ -92,7 +112,9 @@ export function TeamPanel({ members, farmId }: TeamPanelProps) {
                     {roleLabel}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">Joined {since}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Joined {since}
+                </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground/30" />
             </div>

@@ -250,7 +250,6 @@ export class PoultryController {
   @UseGuards(FarmRoleGuard)
   @RequiredRoles(FarmMemberRole.OWNER, FarmMemberRole.MANAGER)
   async getPendingReviewRecords(
-    @Param('farmId') farmId: string,
     @Param('flockId') flockId: string,
     @Query('page') page = 1,
     @Query('limit') limit = 30,

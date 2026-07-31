@@ -32,9 +32,12 @@ export function StockItemsPanel({ items, farmId }: StockItemsPanelProps) {
 
   const CATEGORY_COLOR: Record<string, string> = {
     feed: "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20",
-    medication: "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20",
-    equipment: "border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20",
-    other: "border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-950/20",
+    medication:
+      "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20",
+    equipment:
+      "border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20",
+    other:
+      "border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-950/20",
   };
 
   return (
@@ -47,7 +50,8 @@ export function StockItemsPanel({ items, farmId }: StockItemsPanelProps) {
           <div>
             <h3 className="font-semibold text-foreground">Inventory</h3>
             <p className="text-xs text-muted-foreground">
-              {items.length} tracked items · {Object.keys(byCategory).length} categories
+              {items.length} tracked items · {Object.keys(byCategory).length}{" "}
+              categories
             </p>
           </div>
         </div>
@@ -61,7 +65,13 @@ export function StockItemsPanel({ items, farmId }: StockItemsPanelProps) {
 
       <div className="divide-y">
         {Object.entries(byCategory).map(([cat, catItems]) => (
-          <div key={cat} className={cn("px-5 py-3", CATEGORY_COLOR[cat] ?? CATEGORY_COLOR.other)}>
+          <div
+            key={cat}
+            className={cn(
+              "px-5 py-3",
+              CATEGORY_COLOR[cat] ?? CATEGORY_COLOR.other,
+            )}
+          >
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">{CATEGORY_ICON[cat] ?? "📦"}</span>
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -200,19 +200,133 @@ export interface WeatherData {
   };
   daily: WeatherDay[];
 }
+export interface GeoPoint {
+  type: "Point";
+  coordinates: [number, number];
+}
 
+export interface FarmBoundary {
+  type: string;
+  coordinates: number[][][];
+}
+export interface FarmMember {
+  id: string;
+
+  userId: string;
+  farmId: string;
+
+  role: FarmMemberRole;
+
+  assignedHouseIds: string[] | null;
+
+  isActive: boolean;
+
+  joinedAt: string;
+
+  createdBy: string;
+  updatedBy: string | null;
+
+  removedAt: string | null;
+
+  notes: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Cow {
+  id: string;
+
+  farmId: string;
+
+  tagId: string;
+
+  name: string | null;
+
+  type: string;
+
+  breed: string;
+
+  dateOfBirth: string | null;
+
+  dateAcquired: string | null;
+
+  status: string;
+
+  dateLeft: string | null;
+
+  currentWeightKg: number | null;
+
+  lastWeighedAt: string | null;
+
+  lactationNumber: number | null;
+
+  isCurrentlyLactating: boolean;
+
+  daysInMilk: number | null;
+
+  expectedNextHeatDate: string | null;
+
+  notes: string | null;
+
+  metadata: Record<string, unknown> | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+export interface StockItem {
+  id: string;
+
+  farmId: string;
+
+  category: string;
+
+  name: string;
+
+  description: string | null;
+
+  unit: string;
+
+  minStockLevel: number;
+
+  optimalStockDays: number;
+
+  isActive: boolean;
+
+  notes: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
 export interface Farm {
   id: string;
   name: string;
   description: string | null;
+
   areaHectares: number;
+
   country: string;
   region: string;
   subRegion: string | null;
   timezone: string;
+
   ownerId: string;
-  geoPoint: { type: "Point"; coordinates: [number, number] } | null;
+
+  geoPoint: GeoPoint | null;
+  boundary: FarmBoundary | null;
+
   plots: Plot[];
+
+  members: FarmMember[];
+
+  poultryHouses: PoultryHouse[];
+
+  cows: Cow[];
+
+  ruminants: any[];
+
+  stockItems: StockItem[];
+
   createdAt: string;
   updatedAt: string;
 }
@@ -296,9 +410,9 @@ export interface CreateCropInput {
 // ============================================
 
 export enum FarmMemberRole {
-  OWNER = "OWNER",
-  MANAGER = "MANAGER",
-  WORKER = "WORKER",
+  OWNER = "owner",
+  MANAGER = "manager",
+  WORKER = "worker",
 }
 
 export const getRoleDisplayName = (role: FarmMemberRole): string => {
@@ -313,17 +427,6 @@ export const getRoleDisplayName = (role: FarmMemberRole): string => {
       return "Unknown";
   }
 };
-
-export interface FarmMember {
-  id: string;
-  farmId: string;
-  userId: string;
-  role: FarmMemberRole;
-  joinedAt: string;
-  isActive?: boolean;
-  assignedHouseIds?: string[] | null;
-  user?: { id: string; email?: string; fullName?: string };
-}
 
 // Reuse the existing FarmSummary defined earlier; provide a wrapper for membership responses
 export interface FarmWithRole extends FarmSummary {
@@ -377,4 +480,256 @@ export interface PoultryRecord {
 
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PoultryHouse {
+  id: string;
+  name: string;
+  houseType: "open_sided" | "closed" | "free_range";
+  capacity: number;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  farmId: string;
+  flocks?: Flock[];
+}
+
+export interface Flock {
+  id: string;
+  houseId: string;
+  type: "layers" | "broilers" | "kienyeji" | "unknown";
+  status: "active" | "closed" | "planned";
+  currentStage: "placed" | "brooding" | "growing" | "production" | "harvested";
+  breed: string;
+  initialCount: number;
+  currentCount: number;
+  placementDate: string;
+  ageAtPlacementWeeks: number;
+  targetWeightKg?: number;
+  targetDays?: number;
+  productionStartWeek?: number;
+  expectedMortalityPercent?: number;
+  expectedDailyFeedPerBirdGrams?: number;
+  breakEvenTarget?: number;
+  feedCostTotal: number;
+  revenueTotal: number;
+  netProfit: number;
+  roiPercent: number;
+  closedAt?: string;
+  depletionReason?: string;
+  notes?: string;
+  sales?: Array<{
+    buyer: string;
+    quantity: number;
+    saleDate: string;
+    totalAmount: number;
+    pricePerBird: number;
+    paymentStatus: string;
+    receiptNumber: string;
+  }>;
+}
+
+export interface CreateHouseInput {
+  name: string;
+  houseType: string;
+  capacity: number;
+  notes?: string;
+}
+
+export interface CreateFlockInput {
+  breed: string;
+  type: "layers" | "broilers";
+  initialCount: number;
+  placementDate: string;
+  ageAtPlacementWeeks: number;
+  productionStartWeek?: number;
+  notes?: string;
+}
+
+export interface FlockRecord {
+  id: string;
+  flockId: string;
+  recordDate: string;
+  mortalityCount?: number;
+  feedConsumption?: number;
+  eggProduction?: number;
+  avgWeight?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  submittedById: string;
+  submittedBy: User;
+  status: "draft" | "submitted" | "reviewed" | "flagged";
+  reviewNote?: string;
+  reviewedById?: string;
+  reviewedAt?: string;
+  brokenEggs?: number;
+  dirtyEggs?: number;
+  culls?: number;
+  waterConsumption?: number;
+  sickBirds?: number;
+  morningEggs?: number;
+  eveningEggs?: number;
+  feedType?: string;
+  uniformityPercent?: number;
+  productionRatePercent?: number;
+  feedConversionRatio?: number;
+  sampleSize?: number;
+  avgBodyWeightKg?: number;
+  feedCost?: number;
+  eggRevenue?: number;
+  mortalityCost?: number;
+  healthRiskScore?: number;
+  mortality;
+}
+
+export interface FlockSummary {
+  flock: {
+    id: string;
+    breed: string;
+    type: string;
+    stage: string;
+    status: string;
+    ageInDays: number;
+    placementDate: string;
+    initialCount: number;
+    currentCount: number;
+    survivedCount: number;
+  };
+  biology: {
+    totalMortality: number;
+    mortalityRate: number;
+    healthRiskScore: number;
+    sickBirdsLast7Days: number;
+  };
+  production: {
+    avgProductionRate: number;
+    totalEggsLast7Days: number;
+    status: "OPTIMAL" | "DECLINING";
+  } | null;
+  finance: {
+    totalRevenue: number;
+    totalCost: number;
+    netProfit: number;
+    roi: number;
+    feedCostPerBirdPerDay: string;
+  };
+  operations: {
+    pendingRecordReviews: number;
+    recordsSubmittedLast7Days: number;
+    avgFeedPerDay: string;
+  };
+  forecast: {
+    ageInDays: number;
+    projectedDaysToHarvest: number;
+    projectedFeedCost: number;
+    projectedMortality: number;
+    projectedRemainingBirds: number;
+  };
+  summary: {
+    healthStatus: "HEALTHY" | "AT_RISK" | "CRITICAL";
+    profitabilityStatus: "PROFITABLE" | "UNPROFITABLE";
+    actionRequired: boolean;
+  };
+}
+
+export interface FlockPerformance {
+  flock: {
+    breed: string;
+    type: string;
+  };
+  mortality: {
+    actual: number;
+    expected: number;
+    status: "GOOD" | "POOR";
+  };
+  production: {
+    actual: number;
+    status: "GOOD" | "POOR";
+  } | null;
+  fcr: {
+    actual: number;
+    status: "GOOD" | "POOR";
+  } | null;
+}
+
+export interface FlockForecast {
+  ageInDays: number;
+  projectedDaysToHarvest: number;
+  projectedFeedCost: number;
+  projectedMortality: number;
+  projectedRemainingBirds: number;
+  message?: string;
+}
+
+// types/index.ts - Add these types
+
+export interface PricingTier {
+  id: string;
+  farmId: string;
+  version: number;
+  status: 'active' | 'archived' | 'scheduled' | 'suspended';
+  effectiveDate: string | null;
+  archivedDate: string | null;
+  feedCostPerKg: number;
+  eggPricePerTray: number;
+  broilerPricePerKg: number;
+  mortalityCostPerBird: number;
+  dayOldChickWeightKg: number;
+  waterCostPerLitre: number | null;
+  electricityCostPerUnit: number | null;
+  createdBy: string;
+  createdByUser?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  creationReason: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PricingHistory {
+  id: string;
+  pricingTierId: string;
+  farmId: string;
+  event: 'created' | 'activated' | 'archived' | 'suspended' | 'restored';
+  prices: {
+    feedCostPerKg: number;
+    eggPricePerTray: number;
+    broilerPricePerKg: number;
+    mortalityCostPerBird: number;
+  };
+  eventReason: string | null;
+  actedBy: string;
+  actedByUser?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  eventDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PricingHistoryResponse {
+  data: PricingHistory[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface CreatePricingInput {
+  feedCostPerKg: number;
+  eggPricePerTray: number;
+  broilerPricePerKg: number;
+  mortalityCostPerBird: number;
+  dayOldChickWeightKg?: number;
+  reason: string;
+  notes?: string;
 }

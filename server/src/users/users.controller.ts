@@ -6,6 +6,7 @@ import {
   Patch,
   UseGuards,
   ParseUUIDPipe,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
@@ -40,5 +41,10 @@ export class UsersController {
   ) {
     // TODO: Implement update logic in users.service
     return { message: 'User update not yet implemented', userId: user.id };
+  }
+
+  @Delete(':id')
+  async delete (@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    return await this.usersService.delete(id);
   }
 }

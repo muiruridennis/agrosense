@@ -1,3 +1,4 @@
+import { PricingTier } from './../pricing/entities/pricing-tier.entity';
 import {
   BadRequestException,
   ConflictException,
@@ -28,6 +29,7 @@ import {
   ReviewFlockRecordDto,
 } from './dto/poultry.dto';
 import { RevenueCategory } from '../finance/enums/revenue-category.enum';
+import { PricingService } from '../pricing/pricing.service';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
@@ -63,6 +65,7 @@ export class PoultryService {
 
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly pricingService: PricingService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -196,6 +199,8 @@ export class PoultryService {
       dto.name = `Batch ${flockCount + 1}`;
     }
 
+    const price =  await this.pricingService.getActivePricingForFarm(house.farmId);
+
     // Create flock with initialization
     const flock = this.flockRepo.create({
       ...dto,
@@ -203,6 +208,7 @@ export class PoultryService {
       currentCount: dto.initialCount,
       status: FlockStatus.ACTIVE,
       currentStage: this.assignInitialStage(dto.type),
+      economicAssumptions: price,
     });
 
     // Initialize business metrics
@@ -351,66 +357,76 @@ export class PoultryService {
    * ✓ Triggers sanitation downtime
    */
   async closeFlock(flockId: string): Promise<{
-    flock: Flock;
-    closureReport: any;
-  }> {
-    const flock = await this.flockRepo.findOne({
-      where: { id: flockId },
-      relations: ['records'],
-    });
+  flock: Flock;
+  closureReport: any;
+}> {
+  const flock = await this.flockRepo.findOne({
+    where: { id: flockId },
+    relations: ['records', 'house'],
+  });
 
-    if (!flock) throw new NotFoundException();
-    if (flock.status === FlockStatus.CLOSED) {
-      return { flock, closureReport: { message: 'Already closed' } };
-    }
-
-    // ✅ VALIDATE: All birds accounted for
-    const totalSoldOrDead = flock.initialCount - flock.currentCount;
-    if (totalSoldOrDead < flock.initialCount) {
-      throw new BadRequestException(
-        `Cannot close. ${flock.currentCount} birds still alive. Record sales or mortality first.`,
-      );
-    }
-
-    // ✅ USE EXISTING DATA - NO ESTIMATES!
-    const totalMortality = flock.initialCount - flock.currentCount;
-    const mortalityPercent = (totalMortality / flock.initialCount) * 100;
-
-    // Calculate FCR if broilers
-    let fcr: number | null = null;
-    if (flock.type === FlockType.BROILERS && flock.records?.length) {
-      const totalFeed = flock.records.reduce(
-        (sum, r) => sum + r.feedConsumedKg,
-        0,
-      );
-      const totalWeightGain = flock.records.reduce(
-        (sum, r) => sum + (r.avgBodyWeightKg || 0) * (r.sampleSize || 1),
-        0,
-      );
-      fcr = totalWeightGain > 0 ? totalFeed / totalWeightGain : null;
-    }
-
-    // ✅ UPDATE FLOCK - JUST MARK AS CLOSED
-    flock.status = FlockStatus.CLOSED;
-    flock.currentStage = FlockStage.CLOSED;
-    flock.closedAt = new Date();
-    flock.depletionReason = 'Harvest completed';
-    flock.finalMortalityPercent = mortalityPercent;
-    flock.feedConversionRatio = fcr;
-
-    // Net profit already calculated from daily updates!
-    // No need to recalculate!
-
-    await this.flockRepo.save(flock);
-    return {
-      flock,
-      closureReport: {
-        message: 'Flock closed successfully',
-        netProfit: flock.netProfit,
-        roi: flock.roiPercent,
-      },
-    };
+  if (!flock) throw new NotFoundException();
+  if (flock.status === FlockStatus.CLOSED) {
+    return { flock, closureReport: { message: 'Already closed' } };
   }
+
+  // ✅ Validate: All birds accounted for
+  const totalSoldOrDead = flock.initialCount - flock.currentCount;
+  if (totalSoldOrDead < flock.initialCount) {
+    throw new BadRequestException(
+      `Cannot close. ${flock.currentCount} birds still alive. Record sales or mortality first.`,
+    );
+  }
+
+  // ✅ Get pricing for closure calculations
+  const pricing = await this.pricingService.getActivePricingForFarm(
+    flock.house.farmId,
+  );
+
+  const totalMortality = flock.records.reduce(
+    (sum, r) => sum + (r.mortality ?? 0),
+    0,
+  );
+  const totalCulls = flock.records.reduce(
+    (sum, r) => sum + (r.culls ?? 0),
+    0,
+  );
+  const totalLosses = totalMortality + totalCulls;
+  const mortalityPercent =
+    flock.initialCount > 0 ? (totalMortality / flock.initialCount) * 100 : 0;
+  const cullPercent =
+    flock.initialCount > 0 ? (totalCulls / flock.initialCount) * 100 : 0;
+  const fcr = await this.calculateBroilerFCRFromHistoricalData(flock);
+
+  // Update flock closure
+  flock.status = FlockStatus.CLOSED;
+  flock.currentStage = FlockStage.CLOSED;
+  flock.closedAt = new Date();
+  flock.depletionReason = 'Harvest completed';
+  flock.finalMortalityPercent = mortalityPercent;
+  flock.feedConversionRatio = fcr;
+
+  await this.flockRepo.save(flock);
+
+  // Generate closure report with pricing
+  const closureReport = await this.generateClosureReport(flock, pricing);
+
+  return {
+    flock,
+    closureReport: {
+      message: 'Flock closed successfully',
+      ...closureReport,
+      benchmarkComparison: {
+        breakEvenTarget: flock.breakEvenTarget,
+        netProfitAchieved: closureReport.netProfit,
+        breakEvenMet:
+          flock.breakEvenTarget != null
+            ? closureReport.netProfit >= flock.breakEvenTarget
+            : null,
+      },
+    },
+  };
+}
 
   async getFlock(flockId: string): Promise<Flock> {
     const flock = await this.flockRepo.findOne({ where: { id: flockId } });
@@ -554,79 +570,87 @@ export class PoultryService {
   /**
    * Generate comprehensive closure report
    */
-  private async generateClosureReport(flock: Flock): Promise<{
-    reason: string;
-    totalMortality: number;
-    mortalityPercent: number;
-    feedUsedKg: number;
-    totalRevenue: number;
-    totalCost: number;
-    netProfit: number;
-    roi: number;
-    feedConversionRatio: number;
-  }> {
-    const records = await this.recordRepo.find({
-      where: { flockId: flock.id },
-    });
+  private async generateClosureReport(
+  flock: Flock,
+  pricing: PricingTier,  // ✅ Injected
+): Promise<{
+  reason: string;
+  totalMortality: number;
+  totalCulls: number;
+  mortalityPercent: number;
+  feedUsedKg: number;
+  totalRevenue: number;
+  totalCost: number;
+  netProfit: number;
+  roi: number;
+  feedConversionRatio: number;
+}> {
+  const records = await this.recordRepo.find({
+    where: { flockId: flock.id },
+  });
 
-    const totalMortality = records.reduce(
-      (sum, r) => sum + r.mortality + r.culls,
+  const totalMortality = records.reduce((sum, r) => sum + r.mortality, 0);
+  const totalCulls = records.reduce((sum, r) => sum + r.culls, 0);
+  const totalLosses = totalMortality + totalCulls;
+  const mortalityPercent =
+    flock.initialCount > 0 ? (totalLosses / flock.initialCount) * 100 : 0;
+
+  const feedUsedKg = records.reduce((sum, r) => sum + r.feedConsumedKg, 0);
+
+  // Calculate revenue (simplified — based on eggs or broiler weight)
+  let totalRevenue = 0;
+  if (flock.type === FlockType.LAYERS) {
+    const totalEggs = records.reduce(
+      (sum, r) =>
+        sum +
+        (r.morningEggs ?? 0) +
+        (r.eveningEggs ?? 0) -
+        (r.brokenEggs ?? 0) -
+        (r.dirtyEggs ?? 0),
       0,
     );
-    const mortalityPercent =
-      flock.initialCount > 0 ? (totalMortality / flock.initialCount) * 100 : 0;
-
-    const feedUsedKg = records.reduce((sum, r) => sum + r.feedConsumedKg, 0);
-
-    // Calculate revenue (simplified — based on eggs or broiler weight)
-    let totalRevenue = 0;
-    if (flock.type === FlockType.LAYERS) {
-      const totalEggs = records.reduce(
-        (sum, r) =>
-          sum +
-          (r.morningEggs ?? 0) +
-          (r.eveningEggs ?? 0) -
-          (r.brokenEggs ?? 0) -
-          (r.dirtyEggs ?? 0),
-        0,
-      );
-      totalRevenue = totalEggs * 4; // Assume 4 KES per egg
-    } else {
-      // Broilers: estimate based on final weight
-      const finalWeightEgg = records[records.length - 1]?.avgBodyWeightKg ?? 0;
-      const survivors = flock.currentCount;
-      const totalWeightKg = survivors * finalWeightEgg;
-      totalRevenue = totalWeightKg * 250; // Assume 250 KES per kg
-    }
-
-    // Estimate costs (simplified)
-    const feedCostPerKg = 35; // KES per kg
-    const feedCost = feedUsedKg * feedCostPerKg;
-    const mortalityCost = totalMortality * 800; // Assume 800 KES per bird loss
-    const totalCost = feedCost + mortalityCost;
-
-    const netProfit = totalRevenue - totalCost;
-    const roi =
-      totalCost > 0 ? ((netProfit / totalCost) * 100).toFixed(2) : 'N/A';
-
-    const feedConversionRatio =
-      flock.type === FlockType.BROILERS && flock.currentCount > 0
-        ? feedUsedKg / (flock.currentCount * 2.5) // Assume avg 2.5kg final weight
-        : 0;
-
-    return {
-      reason: 'Harvest completed',
-      totalMortality,
-      mortalityPercent: parseFloat(mortalityPercent.toFixed(2)),
-      feedUsedKg: parseFloat(feedUsedKg.toFixed(2)),
-      totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-      totalCost: parseFloat(totalCost.toFixed(2)),
-      netProfit: parseFloat(netProfit.toFixed(2)),
-      roi: typeof roi === 'number' ? roi : parseFloat(roi),
-      feedConversionRatio: parseFloat(feedConversionRatio.toFixed(3)),
-    };
+    // ✅ FIX: Convert eggs to trays
+    const totalTrays = totalEggs / 30;
+    totalRevenue = totalTrays * pricing.eggPricePerTray;
+  } else {
+    const latestWeightRecord = [...records]
+      .reverse()
+      .find((r) => r.avgBodyWeightKg != null);
+    const avgWeightKg = latestWeightRecord?.avgBodyWeightKg ?? 0;
+    const birdsRaisedForHarvest = Math.max(0, flock.initialCount - totalLosses);
+    // ✅ Use pricing-provided broiler price
+    totalRevenue =
+      birdsRaisedForHarvest *
+      avgWeightKg *
+      pricing.broilerPricePerKg;
   }
 
+  // ✅ Use pricing-provided costs
+  const feedCost = feedUsedKg * pricing.feedCostPerKg;
+  const mortalityCost = totalLosses * pricing.mortalityCostPerBird;
+  const totalCost = feedCost + mortalityCost;
+
+  const netProfit = totalRevenue - totalCost;
+  const roi =
+    totalCost > 0 ? ((netProfit / totalCost) * 100).toFixed(2) : 'N/A';
+
+  const birdsRaisedForHarvest = Math.max(0, flock.initialCount - totalLosses);
+  const feedConversionRatio =
+    (await this.calculateBroilerFCRFromHistoricalData(flock)) ?? 0;
+
+  return {
+    reason: 'Harvest completed',
+    totalMortality,
+    totalCulls,
+    mortalityPercent: parseFloat(mortalityPercent.toFixed(2)),
+    feedUsedKg: parseFloat(feedUsedKg.toFixed(2)),
+    totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+    totalCost: parseFloat(totalCost.toFixed(2)),
+    netProfit: parseFloat(netProfit.toFixed(2)),
+    roi: typeof roi === 'number' ? roi : parseFloat(roi),
+    feedConversionRatio: parseFloat(feedConversionRatio.toFixed(3)),
+  };
+}
   // ═══════════════════════════════════════════════════════════════════════════════
   // DAILY RECORD INTELLIGENCE ENGINE
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -639,6 +663,8 @@ export class PoultryService {
    * ✓ Updates cumulative flock metrics
    * ✓ Generates alerts
    */
+  // In poultry.service.ts - replace the createRecord method
+
   async createRecord(
     flockId: string,
     userId: string,
@@ -669,6 +695,7 @@ export class PoultryService {
 
     // Validate record completeness
     this.validateRecordCompleteness(flock, dto);
+    this.validateRecordBounds(flock, dto);
 
     // Calculate mortality impact
     const mortality = dto.mortality ?? 0;
@@ -684,26 +711,81 @@ export class PoultryService {
       );
     }
 
-    // Calculate KPIs
-    const kpis = this.calculateRecordKPIs(flock, dto, liveBirdsAfterRecord);
+    // ✅ FIX: Get pricing from PricingService, not hardcoded
+    const pricing = await this.pricingService.getActivePricingForFarm(
+      flock.house.farmId,
+    );
 
-    // Create record
+    // Calculate KPIs using LIVE pricing
+    const kpis = await this.calculateRecordKPIs(
+      flock,
+      dto,
+      liveBirdsAfterRecord,
+      pricing,
+    );
+
+    // ── Create record with explicit field mapping ──
     const record = this.recordRepo.create({
-      ...dto,
       flockId,
       submittedById: userId,
       recordDate: new Date(dto.recordDate),
       status: RecordStatus.DRAFT,
+
+      // Common fields
+      mortality: dto.mortality ?? 0,
+      culls: dto.culls ?? 0,
+      feedConsumedKg: dto.feedConsumedKg ?? 0,
+      feedType: dto.feedType ?? null,
+      waterConsumedLitres: dto.waterConsumedLitres ?? null,
+      sickBirds: dto.sickBirds ?? 0,
+      medication: dto.medication ?? null,
+      temperatureCelsius: dto.temperatureCelsius ?? null,
+      remarks: dto.remarks ?? null,
+
+      // Layers-specific
+      morningEggs: dto.morningEggs ?? null,
+      eveningEggs: dto.eveningEggs ?? null,
+      brokenEggs: dto.brokenEggs ?? null,
+      dirtyEggs: dto.dirtyEggs ?? null,
+
+      // Broilers-specific
+      avgBodyWeightKg: dto.avgBodyWeightKg ?? null,
+      sampleSize: dto.sampleSize ?? null,
+
+      uniformitySample: dto.uniformitySample
+        ? {
+            minWeightKg: dto.uniformitySample.minWeightKg,
+            maxWeightKg: dto.uniformitySample.maxWeightKg,
+            sampleSize: dto.uniformitySample.sampleSize,
+            weights: dto.uniformitySample.weights ?? undefined,
+          }
+        : null,
+
+      uniformityPercent: dto.uniformitySample
+        ? this.calculateUniformityPercent(dto.uniformitySample)
+        : null,
+
+      // Computed KPIs (now with LIVE pricing)
       liveBirdsAfterRecord,
       productionRatePercent: kpis.productionRatePercent,
       feedConversionRatio: kpis.feedConversionRatio,
       feedCost: kpis.feedCost,
       eggRevenue: kpis.eggRevenue,
       mortalityCost: kpis.mortalityCost,
+      deviationFlags: kpis.deviationFlags ?? null,
       healthRiskScore: kpis.healthRiskScore,
     });
 
     const saved = await this.recordRepo.save(record);
+
+    // ✅ Capture pricing snapshot for reconciliation
+    await this.pricingService.captureRecordPricingSnapshot(
+      saved.id,
+      flock.house.farmId,
+      dto.feedConsumedKg ?? 0,
+      mortality,
+      Math.ceil(((dto.morningEggs ?? 0) + (dto.eveningEggs ?? 0)) / 30), // Convert eggs to trays
+    );
 
     // Update flock cumulative metrics
     flock.currentCount = liveBirdsAfterRecord;
@@ -722,16 +804,18 @@ export class PoultryService {
 
     // Detect anomalies and generate alerts
     const alerts = await this.detectAndGenerateAlerts(saved, flock);
-    // After saving the record, emit event
+
+    // Emit event
     this.eventEmitter.emit('poultry.flock_record.created', {
       flockRecordId: saved.id,
       flockId: flock.id,
       farmId: flock.house.farmId,
       feedItemId: dto.feedItemId,
-      feedConsumedKg: dto.feedConsumedKg,
-      eggsProduced: (dto.morningEggs || 0) + (dto.eveningEggs || 0),
+      feedConsumedKg: dto.feedConsumedKg ?? 0,
+      eggsProduced: (dto.morningEggs ?? 0) + (dto.eveningEggs ?? 0),
       recordDate: saved.recordDate,
-      mortalityCount: (dto.mortality || 0) + (dto.culls || 0),
+      mortalityCount: dto.mortality ?? 0,
+      cullsCount: dto.culls ?? 0,
       supplier: dto.feedType || 'unknown',
       flockType: flock.type,
       breed: flock.breed,
@@ -744,7 +828,6 @@ export class PoultryService {
       kpis,
     };
   }
-
   /**
    * Validate record has all required fields for flock type
    */
@@ -769,73 +852,261 @@ export class PoultryService {
     }
   }
 
-  /**
-   * Calculate all KPIs for the record
-   */
-  private calculateRecordKPIs(
-    flock: Flock,
-    dto: CreateFlockRecordDto,
-    liveBirdsAfterRecord: number,
-  ): {
-    productionRatePercent: number | null;
-    feedConversionRatio: number | null;
-    feedCost: number;
-    eggRevenue: number;
-    mortalityCost: number;
-    healthRiskScore: number;
-  } {
-    let productionRatePercent: number | null = null;
-    let feedConversionRatio: number | null = null;
-    let eggRevenue = 0;
-    let feedCost = 0;
-    let mortalityCost = 0;
+  private validateRecordBounds(flock: Flock, dto: CreateFlockRecordDto): void {
+    const mortality = dto.mortality ?? 0;
+    const culls = dto.culls ?? 0;
+    const totalLosses = mortality + culls;
+    const sickBirds = dto.sickBirds ?? 0;
 
-    // Feed cost (assume 35 KES/kg)
-    feedCost = dto.feedConsumedKg * 35;
+    if (totalLosses > flock.currentCount) {
+      throw new BadRequestException(
+        `Mortality + culls (${totalLosses}) exceeds current live count (${flock.currentCount})`,
+      );
+    }
 
-    // Mortality cost (assume 800 KES/bird)
-    mortalityCost = (dto.mortality ?? 0) * 800;
+    if (sickBirds > flock.currentCount) {
+      throw new BadRequestException(
+        `Sick birds (${sickBirds}) cannot exceed current live count (${flock.currentCount})`,
+      );
+    }
 
     if (flock.type === FlockType.LAYERS) {
       const totalEggs = (dto.morningEggs ?? 0) + (dto.eveningEggs ?? 0);
-      const netEggs = totalEggs - (dto.brokenEggs ?? 0) - (dto.dirtyEggs ?? 0);
+      const brokenEggs = dto.brokenEggs ?? 0;
+      const dirtyEggs = dto.dirtyEggs ?? 0;
+      const downgradedEggs = brokenEggs + dirtyEggs;
+      const layingEligibleBirds = this.getLayingEligibleBirdsCount(
+        flock,
+        Math.max(0, flock.currentCount - totalLosses),
+      );
 
-      if (liveBirdsAfterRecord > 0) {
-        productionRatePercent = parseFloat(
-          ((totalEggs / liveBirdsAfterRecord) * 100).toFixed(2),
+      if (downgradedEggs > totalEggs) {
+        throw new BadRequestException(
+          `brokenEggs + dirtyEggs (${downgradedEggs}) cannot exceed total eggs collected (${totalEggs})`,
         );
       }
 
-      // Revenue (assume 4 KES per egg)
-      eggRevenue = netEggs * 4;
-    }
+      if (layingEligibleBirds === 0 && totalEggs > 0) {
+        throw new BadRequestException(
+          'Egg production cannot be recorded before the flock reaches laying age',
+        );
+      }
 
-    if (flock.type === FlockType.BROILERS && dto.avgBodyWeightKg) {
-      const weightGain = dto.avgBodyWeightKg * (dto.sampleSize ?? 1);
-      if (weightGain > 0) {
-        feedConversionRatio = parseFloat(
-          (dto.feedConsumedKg / weightGain).toFixed(3),
+      const maxPlausibleEggs = Math.ceil(layingEligibleBirds * 1.05);
+      if (totalEggs > maxPlausibleEggs) {
+        throw new BadRequestException(
+          `Egg count (${totalEggs}) exceeds plausible daily maximum (${maxPlausibleEggs}) for ${layingEligibleBirds} laying birds`,
         );
       }
     }
+  }
 
-    // Health risk score (0-100)
-    const healthRiskScore = this.calculateHealthRiskScore(
-      dto.sickBirds ?? 0,
-      dto.mortality ?? 0,
-      liveBirdsAfterRecord,
-      dto.temperatureCelsius ?? 24,
+  private getLayingEligibleBirdsCount(
+    flock: Flock,
+    liveBirdsAfterRecord: number,
+  ): number {
+    if (flock.type !== FlockType.LAYERS) return liveBirdsAfterRecord;
+
+    const ageInDays = this.getFlockAgeInDays(flock.placementDate);
+    console.log(
+      `Flock age in days: ${ageInDays}, live birds after record: ${liveBirdsAfterRecord}`,
     );
 
-    return {
-      productionRatePercent,
-      feedConversionRatio,
-      feedCost,
-      eggRevenue,
-      mortalityCost,
-      healthRiskScore,
-    };
+    if (ageInDays < 126) {
+      return 0;
+    }
+    return liveBirdsAfterRecord;
   }
+
+  private async calculateBroilerFCRFromHistoricalData(
+    flock: Flock,
+    pendingRecord?: Pick<
+      CreateFlockRecordDto,
+      'feedConsumedKg' | 'avgBodyWeightKg'
+    >,
+  ): Promise<number | null> {
+    if (flock.type !== FlockType.BROILERS) return null;
+
+    const records = await this.recordRepo.find({
+      where: { flockId: flock.id },
+      order: { recordDate: 'ASC' },
+    });
+
+    const totalFeedKg =
+      records.reduce((sum, r) => sum + (r.feedConsumedKg ?? 0), 0) +
+      (pendingRecord?.feedConsumedKg ?? 0);
+
+    let latestAvgWeightKg: number | null =
+      pendingRecord?.avgBodyWeightKg != null
+        ? pendingRecord.avgBodyWeightKg
+        : null;
+
+    if (latestAvgWeightKg == null) {
+      const latestWeightRecord = [...records]
+        .reverse()
+        .find((r) => r.avgBodyWeightKg != null);
+      latestAvgWeightKg = latestWeightRecord?.avgBodyWeightKg ?? null;
+    }
+
+    if (latestAvgWeightKg == null) return null;
+
+    const assumptions = await this.pricingService.getActivePricingForFarm(
+      flock.house.farmId,
+    );
+    const startWeightKg = assumptions.dayOldChickWeightKg;
+    const finalLiveWeightKg = (flock.currentCount ?? 0) * latestAvgWeightKg;
+
+    const totalLostBirdWeightKg = records.reduce((sum, r) => {
+      const lostBirds = (r.mortality ?? 0) + (r.culls ?? 0);
+      const sampleWeightKg = r.avgBodyWeightKg ?? latestAvgWeightKg;
+      return sum + lostBirds * sampleWeightKg;
+    }, 0);
+
+    const totalBiomassKg = finalLiveWeightKg + totalLostBirdWeightKg;
+    const totalStartBiomassKg = flock.initialCount * startWeightKg;
+    const totalWeightGainKg = totalBiomassKg - totalStartBiomassKg;
+
+    if (totalWeightGainKg <= 0) return null;
+    return parseFloat((totalFeedKg / totalWeightGainKg).toFixed(3));
+  }
+
+  /**
+   * Calculate all KPIs for the record
+   */
+  // In poultry.service.ts - replace the calculateRecordKPIs method
+
+  private async calculateRecordKPIs(
+  flock: Flock,
+  dto: CreateFlockRecordDto,
+  liveBirdsAfterRecord: number,
+  pricing: PricingTier,  // ✅ Now injected, not fetched locally
+): Promise<{
+  productionRatePercent: number | null;
+  feedConversionRatio: number | null;
+  feedCost: number;
+  eggRevenue: number;
+  mortalityCost: number;
+  cullCost: number;
+  healthRiskScore: number;
+  deviationFlags: string | null;
+}> {
+  let productionRatePercent: number | null = null;
+  let feedConversionRatio: number | null = null;
+  let feedCost = 0;
+  let eggRevenue = 0;
+  let mortalityCost = 0;
+  let cullCost = 0;
+  let deviationFlags: string[] = [];
+
+  // ✅ Use pricing passed in, not local assumptions
+  feedCost = (dto.feedConsumedKg ?? 0) * pricing.feedCostPerKg;
+  mortalityCost = (dto.mortality ?? 0) * pricing.mortalityCostPerBird;
+  cullCost = (dto.culls ?? 0) * pricing.mortalityCostPerBird;
+
+  // ── Layers KPI ─────────────────────────────────────────────────────────────
+  if (flock.type === FlockType.LAYERS) {
+    const morningEggs = dto.morningEggs ?? 0;
+    const eveningEggs = dto.eveningEggs ?? 0;
+    const brokenEggs = dto.brokenEggs ?? 0;
+    const dirtyEggs = dto.dirtyEggs ?? 0;
+    const totalEggs = morningEggs + eveningEggs;
+    const saleableEggs = Math.max(0, totalEggs - brokenEggs - dirtyEggs);
+
+    // Production rate: eggs per eligible bird (capped at 100%)
+    const ageInDays = this.getFlockAgeInDays(flock.placementDate);
+    const productionStartDay = (flock.productionStartWeek ?? 20) * 7;
+    const eligibleBirds =
+      ageInDays >= productionStartDay ? liveBirdsAfterRecord : 0;
+
+    if (eligibleBirds > 0) {
+      productionRatePercent = Math.min(100, (totalEggs / eligibleBirds) * 100);
+      productionRatePercent = parseFloat(productionRatePercent.toFixed(2));
+    }
+
+    // ✅ FIX: Revenue calculation using per-TRAY pricing
+    // Convert eggs to trays (30 eggs per tray)
+    const saleableTrays = saleableEggs / 30;
+    eggRevenue = saleableTrays * pricing.eggPricePerTray;
+
+    // Check for production deviations
+    if (
+      productionRatePercent !== null &&
+      productionRatePercent < 60 &&
+      ageInDays > 150
+    ) {
+      deviationFlags.push('low_production');
+    }
+  }
+
+  // ── Broilers KPI ───────────────────────────────────────────────────────────
+  if (flock.type === FlockType.BROILERS) {
+    const avgWeight = dto.avgBodyWeightKg ?? 0;
+    const sampleSize = dto.sampleSize ?? 1;
+
+    // Calculate FCR using the historical method
+    feedConversionRatio = await this.calculateBroilerFCRFromHistoricalData(
+      flock,
+      {
+        feedConsumedKg: dto.feedConsumedKg,
+        avgBodyWeightKg: dto.avgBodyWeightKg,
+      },
+    );
+
+    // Calculate uniformity from sample if provided
+    if (dto.uniformitySample) {
+      const {
+        minWeightKg,
+        maxWeightKg,
+        sampleSize: sample,
+      } = dto.uniformitySample;
+      if (minWeightKg && maxWeightKg && sample > 0) {
+        const avg = (minWeightKg + maxWeightKg) / 2;
+        const spread = maxWeightKg - minWeightKg;
+        const uniformity = Math.max(0, 100 - (spread / avg) * 50);
+        dto.uniformitySample.weights = dto.uniformitySample.weights || [];
+        dto.uniformitySample.weights.push(uniformity);
+      }
+    }
+
+    // Check for FCR deviations
+    if (feedConversionRatio !== null && feedConversionRatio > 2.2) {
+      deviationFlags.push('poor_fcr');
+    }
+  }
+
+  // ── Health Risk Score ────────────────────────────────────────────────────
+  const healthRiskScore = this.calculateHealthRiskScore(
+    dto.sickBirds ?? 0,
+    dto.mortality ?? 0,
+    liveBirdsAfterRecord,
+    dto.temperatureCelsius ?? 24,
+  );
+
+  // Add high health risk flag
+  if (healthRiskScore > 60) {
+    deviationFlags.push('high_health_risk');
+  }
+
+  // Check sick birds percentage
+  if (liveBirdsAfterRecord > 0) {
+    const sickPercent = ((dto.sickBirds ?? 0) / liveBirdsAfterRecord) * 100;
+    if (sickPercent > 5) {
+      deviationFlags.push('high_sick_rate');
+    }
+  }
+
+  return {
+    productionRatePercent,
+    feedConversionRatio,
+    feedCost,
+    eggRevenue,
+    mortalityCost,
+    cullCost,
+    healthRiskScore,
+    deviationFlags:
+      deviationFlags.length > 0 ? deviationFlags.join(',') : null,
+  };
+}
 
   /**
    * Health risk assessment (0-100 scale)
@@ -880,59 +1151,169 @@ export class PoultryService {
   ): Promise<any[]> {
     const alerts: any[] = [];
 
-    // High mortality alert
-    if ((record.mortality ?? 0) > 5 || (record.culls ?? 0) > 5) {
+    const previousRecords = await this.recordRepo.find({
+      where: { flockId: flock.id },
+      order: { recordDate: 'DESC' },
+      take: 7,
+    });
+
+    const ageInDays = this.getFlockAgeInDays(flock.placementDate);
+
+    const assumptions = await this.pricingService.getActivePricingForFarm(
+      flock.house.farmId,
+    );
+
+    // ------------------------------------------------------------------
+    // MORTALITY TREND
+    // ------------------------------------------------------------------
+
+    const avgHistoricalMortality =
+      previousRecords.length > 0
+        ? previousRecords.reduce(
+            (sum, r) => sum + (r.mortality ?? 0) + (r.culls ?? 0),
+            0,
+          ) / previousRecords.length
+        : 0;
+
+    const todayLosses = (record.mortality ?? 0) + (record.culls ?? 0);
+
+    if (
+      avgHistoricalMortality > 0 &&
+      todayLosses > avgHistoricalMortality * 2
+    ) {
       alerts.push({
-        type: 'HIGH_MORTALITY',
+        type: 'MORTALITY_SPIKE',
         severity: 'HIGH',
-        message: `Unusual mortality detected: ${record.mortality} deaths, ${record.culls} culls`,
-        estimatedLoss: ((record.mortality ?? 0) + (record.culls ?? 0)) * 800,
-        action: 'Investigate disease, water quality, or feed issues',
+        message: `Losses increased from average ${avgHistoricalMortality.toFixed(1)} birds/day to ${todayLosses}`,
+        action:
+          'Investigate disease outbreak, feed quality, water supply, and ventilation',
       });
     }
 
-    // Production drop (layers)
-    if (flock.type === FlockType.LAYERS && record.productionRatePercent) {
-      if (record.productionRatePercent < 60) {
+    // ------------------------------------------------------------------
+    // CUMULATIVE MORTALITY
+    // ------------------------------------------------------------------
+
+    const mortalityRate =
+      ((flock.initialCount - flock.currentCount) / flock.initialCount) * 100;
+
+    if (
+      flock.expectedMortalityPercent &&
+      mortalityRate > flock.expectedMortalityPercent
+    ) {
+      alerts.push({
+        type: 'MORTALITY_ABOVE_BENCHMARK',
+        severity: 'HIGH',
+        message: `Mortality ${mortalityRate.toFixed(2)}% exceeds benchmark ${flock.expectedMortalityPercent}%`,
+        action: 'Review flock health and biosecurity practices',
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // LAYER PERFORMANCE
+    // ------------------------------------------------------------------
+
+    if (
+      flock.type === FlockType.LAYERS &&
+      record.productionRatePercent !== null
+    ) {
+      const avgProduction =
+        previousRecords
+          .filter((r) => r.productionRatePercent !== null)
+          .reduce((sum, r) => sum + (r.productionRatePercent ?? 0), 0) /
+        Math.max(
+          1,
+          previousRecords.filter((r) => r.productionRatePercent !== null)
+            .length,
+        );
+
+      if (
+        avgProduction > 0 &&
+        record.productionRatePercent < avgProduction * 0.8
+      ) {
         alerts.push({
-          type: 'PRODUCTION_DECLINE',
-          severity: 'MEDIUM',
-          message: `Egg production drop: ${record.productionRatePercent}% (expected >80%)`,
-          action: 'Review feed quality, stress factors, and health status',
+          type: 'PRODUCTION_DROP',
+          severity: 'HIGH',
+          message: `Production dropped from ${avgProduction.toFixed(1)}% to ${record.productionRatePercent.toFixed(1)}%`,
+          action:
+            'Inspect feed, lighting schedule, stress factors and disease signs',
         });
       }
     }
 
-    // Feed inefficiency (broilers)
+    // ------------------------------------------------------------------
+    // BROILER FCR
+    // ------------------------------------------------------------------
+
     if (flock.type === FlockType.BROILERS && record.feedConversionRatio) {
-      if (record.feedConversionRatio > 2.2) {
+      if (record.feedConversionRatio > 2.0) {
         alerts.push({
           type: 'POOR_FCR',
           severity: 'MEDIUM',
-          message: `Feed conversion ratio high: ${record.feedConversionRatio} (target <2.0)`,
+          message: `FCR is ${record.feedConversionRatio}`,
           estimatedLoss: record.feedCost * 0.15,
-          action: 'Optimize feeding strategy or investigate intestinal health',
+          action: 'Review feed formulation, feeding schedule and gut health',
         });
       }
     }
 
-    // Health risk
-    if (record.healthRiskScore > 50) {
+    // WATER ANOMALY
+    // ------------------------------------------------------------------
+
+    if (record.waterConsumedLitres && record.feedConsumedKg > 0) {
+      const ratio = record.waterConsumedLitres / record.feedConsumedKg;
+
+      if (ratio < 1.6 || ratio > 2.8) {
+        alerts.push({
+          type: 'WATER_FEED_RATIO',
+          severity: 'MEDIUM',
+          message: `Water/feed ratio ${ratio.toFixed(2)} outside expected range`,
+          action:
+            'Check drinkers, heat stress, feed quality and disease symptoms',
+        });
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // HEALTH RISK
+    // ------------------------------------------------------------------
+
+    if (record.healthRiskScore > 70) {
       alerts.push({
-        type: 'HEALTH_RISK',
-        severity: record.healthRiskScore > 75 ? 'HIGH' : 'MEDIUM',
-        message: `Health risk score: ${record.healthRiskScore}/100`,
-        action: 'Quarantine affected birds and isolate house',
+        type: 'CRITICAL_HEALTH_RISK',
+        severity: 'HIGH',
+        message: `Health risk score ${record.healthRiskScore}/100`,
+        action: 'Immediate veterinary intervention recommended',
       });
     }
 
-    // Profitability decline
-    if (flock.netProfit < 0) {
+    // ------------------------------------------------------------------
+    // PROFITABILITY
+    // ------------------------------------------------------------------
+
+    if (flock.breakEvenTarget && flock.netProfit < 0) {
       alerts.push({
-        type: 'PROFITABILITY_DECLINE',
+        type: 'NEGATIVE_PROFITABILITY',
         severity: 'HIGH',
-        message: `Flock net profit is negative: ${flock.netProfit} KES`,
-        action: 'Review pricing, feed costs, and consider early harvest',
+        message: `Current flock profit is ${flock.netProfit.toFixed(0)} KES`,
+        action: 'Review feed costs, mortality losses and selling prices',
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // STAGE ALERTS
+    // ------------------------------------------------------------------
+
+    if (
+      flock.type === FlockType.BROILERS &&
+      ageInDays > 42 &&
+      flock.currentStage !== FlockStage.HARVEST_READY
+    ) {
+      alerts.push({
+        type: 'OVERDUE_HARVEST',
+        severity: 'MEDIUM',
+        message: 'Broilers have exceeded recommended harvest age',
+        action: 'Evaluate market readiness and harvest planning',
       });
     }
 
@@ -1161,7 +1542,7 @@ export class PoultryService {
 
     const records = await this.recordRepo.find({ where: { flockId } });
     const totalMortality = records.reduce(
-      (sum, r) => sum + r.mortality + r.culls,
+      (sum, r) => sum + (r.mortality ?? 0),
       0,
     );
 
@@ -1202,24 +1583,7 @@ export class PoultryService {
   async calculateFCR(flockId: string): Promise<number | null> {
     const flock = await this.flockRepo.findOne({ where: { id: flockId } });
     if (!flock || flock.type !== FlockType.BROILERS) return null;
-
-    const records = await this.recordRepo.find({
-      where: { flockId },
-      order: { recordDate: 'DESC' },
-      take: 7,
-    });
-
-    const fcrWithValue = records
-      .filter((r) => r.feedConversionRatio !== null)
-      .map((r) => r.feedConversionRatio as number);
-
-    return fcrWithValue.length
-      ? parseFloat(
-          (
-            fcrWithValue.reduce((a, b) => a + b, 0) / fcrWithValue.length
-          ).toFixed(3),
-        )
-      : 0;
+    return this.calculateBroilerFCRFromHistoricalData(flock);
   }
 
   /**
@@ -1354,12 +1718,22 @@ export class PoultryService {
 
     // BIOLOGICAL
     const totalMortality = allRecords.reduce(
-      (sum, r) => sum + r.mortality + r.culls,
+      (sum, r) => sum + (r.mortality ?? 0),
       0,
     );
+    const totalCulls = allRecords.reduce((sum, r) => sum + (r.culls ?? 0), 0);
+    const totalLosses = totalMortality + totalCulls;
     const mortalityRate =
       flock.initialCount > 0
         ? parseFloat(((totalMortality / flock.initialCount) * 100).toFixed(2))
+        : 0;
+    const cullRate =
+      flock.initialCount > 0
+        ? parseFloat(((totalCulls / flock.initialCount) * 100).toFixed(2))
+        : 0;
+    const lossRate =
+      flock.initialCount > 0
+        ? parseFloat(((totalLosses / flock.initialCount) * 100).toFixed(2))
         : 0;
 
     // PRODUCTION (Layers)
@@ -1413,7 +1787,11 @@ export class PoultryService {
       // BIOLOGICAL METRICS
       biology: {
         totalMortality,
+        totalCulls,
+        totalLosses,
         mortalityRate,
+        cullRate,
+        lossRate,
         healthRiskScore: avgHealthRisk,
         sickBirdsLast7Days: last7Days.reduce(
           (sum, r) => sum + (r.sickBirds ?? 0),
@@ -1486,5 +1864,44 @@ export class PoultryService {
       where: { house: { farmId }, status: FlockStatus.ACTIVE },
       relations: ['house'],
     });
+  }
+  // Add this method to your PoultryService class
+
+  /**
+   * Calculate uniformity percent from a sample
+   * Uniformity = % of birds within ±10% of average weight
+   */
+  private calculateUniformityPercent(sample: {
+    minWeightKg: number;
+    maxWeightKg: number;
+    sampleSize: number;
+    weights?: number[];
+  }): number | null {
+    if (!sample || sample.sampleSize < 2) return null;
+
+    const { minWeightKg, maxWeightKg, sampleSize, weights } = sample;
+
+    // If we have individual weights, calculate precise uniformity
+    if (weights && weights.length > 0) {
+      const avg = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+      const lowerBound = avg * 0.9;
+      const upperBound = avg * 1.1;
+      const withinRange = weights.filter(
+        (w) => w >= lowerBound && w <= upperBound,
+      );
+      return parseFloat(
+        ((withinRange.length / weights.length) * 100).toFixed(2),
+      );
+    }
+
+    // Otherwise estimate using min/max spread
+    const avg = (minWeightKg + maxWeightKg) / 2;
+    const spread = maxWeightKg - minWeightKg;
+    const spreadPercent = (spread / avg) * 100;
+
+    // Estimate uniformity: 100% - spread% (roughly)
+    // If spread is 20%, uniformity ~80%
+    const uniformity = Math.max(0, 100 - spreadPercent);
+    return parseFloat(Math.min(100, uniformity).toFixed(2));
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -23,12 +23,20 @@ import {
   Package,
   Users,
   HelpCircle,
+  Sparkles,
+  Circle,
+  ChevronUp,
+  ChevronDown,
+  Shield,
+  User,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/providers/auth-provider";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // ──────────────────────────────────────────────────────────────────────────
 // SHELL LAYOUT CONSTANTS (8px Grid System)
@@ -36,12 +44,12 @@ import { useAuth } from "@/providers/auth-provider";
 
 export const SHELL_LAYOUT = {
   sidebar: {
-    widthExpanded: 256,  // 32 × 8px  (w-64)
-    widthCollapsed: 64,  // 8  × 8px  (w-16)
+    widthExpanded: 256, // 32 × 8px  (w-64)
+    widthCollapsed: 64, // 8  × 8px  (w-16)
     transitionMs: 220,
   },
   topbar: {
-    height: 56,          // 7 × 8px   (h-14)
+    height: 56, // 7 × 8px   (h-14)
   },
   spacing: {
     xs: 4,
@@ -57,31 +65,73 @@ export const SHELL_LAYOUT = {
 // ──────────────────────────────────────────────────────────────────────────
 
 const NAV_MAIN = [
-  { label: "Dashboard",   href: "/dashboard",            icon: LayoutDashboard, exact: true },
-  { label: "Farms",       href: "/dashboard/farms",      icon: Leaf },
-  { label: "Crops",       href: "/dashboard/crops",      icon: Sprout,     domain: "crop"      as const },
-  { label: "Livestock",   href: "/dashboard/livestock",  icon: Rabbit,     domain: "livestock" as const },
-  { label: "FarmLedger",  href: "/dashboard/ledger",     icon: BookOpen,   domain: "ledger"    as const },
-  { label: "AgroAdvisor", href: "/dashboard/advisor",    icon: CloudSun,   domain: "advisory"  as const },
-  { label: "Marketplace", href: "/dashboard/marketplace",icon: TrendingUp },
-  { label: "Inventory",   href: "/dashboard/inventory",  icon: Package },
-  {label : "Reports & Analytics",      href: "/dashboard/reports",    icon: BookOpen },
-  { label: "Alerts",      href: "/dashboard/alerts",     icon: AlertTriangle },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    exact: true,
+  },
+  { label: "Farms", href: "/dashboard/farms", icon: Leaf },
+  {
+    label: "Crops",
+    href: "/dashboard/crops",
+    icon: Sprout,
+    domain: "crop" as const,
+  },
+  {
+    label: "Livestock",
+    href: "/dashboard/livestock",
+    icon: Rabbit,
+    domain: "livestock" as const,
+  },
+  {
+    label: "FarmLedger",
+    href: "/dashboard/ledger",
+    icon: BookOpen,
+    domain: "ledger" as const,
+  },
+  {
+    label: "AgroAdvisor",
+    href: "/dashboard/advisor",
+    icon: CloudSun,
+    domain: "advisory" as const,
+  },
+  { label: "Marketplace", href: "/dashboard/marketplace", icon: TrendingUp },
+  { label: "Inventory", href: "/dashboard/inventory", icon: Package },
+  { label: "Reports & Analytics", href: "/dashboard/reports", icon: BookOpen },
+  { label: "Alerts", href: "/dashboard/alerts", icon: AlertTriangle },
 ] as const;
 
 const NAV_SECONDARY = [
-  { label: "Team",          href: "/dashboard/team",          icon: Users },
-  { label: "Credit Profile",href: "/dashboard/credit",        icon: CreditCard },
-  { label: "Notifications", href: "/dashboard/notifications", icon: Bell,     badge: 3 },
-  { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+  { label: "Team", href: "/dashboard/team", icon: Users },
+  { label: "Credit Profile", href: "/dashboard/credit", icon: CreditCard },
+  {
+    label: "Notifications",
+    href: "/dashboard/notifications",
+    icon: Bell,
+    badge: 3,
+  },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ] as const;
 
 // Domain accent dots — all wired to theme tokens, dark-mode safe
 const DOMAIN_STYLES = {
-  crop:      { dot: "bg-crop-foreground",      pill: "bg-crop      text-crop-foreground"      },
-  livestock: { dot: "bg-livestock-foreground", pill: "bg-livestock text-livestock-foreground" },
-  ledger:    { dot: "bg-ledger-foreground",    pill: "bg-ledger    text-ledger-foreground"    },
-  advisory:  { dot: "bg-advisory-foreground",  pill: "bg-advisory  text-advisory-foreground"  },
+  crop: {
+    dot: "bg-crop-foreground",
+    pill: "bg-crop      text-crop-foreground",
+  },
+  livestock: {
+    dot: "bg-livestock-foreground",
+    pill: "bg-livestock text-livestock-foreground",
+  },
+  ledger: {
+    dot: "bg-ledger-foreground",
+    pill: "bg-ledger    text-ledger-foreground",
+  },
+  advisory: {
+    dot: "bg-advisory-foreground",
+    pill: "bg-advisory  text-advisory-foreground",
+  },
 } as const;
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -150,19 +200,28 @@ function NavItem({
           isActive && collapsed && "bg-primary/10",
         )}
       >
-        <Icon className={cn("shrink-0 transition-transform duration-150", collapsed ? "h-4.5 w-4.5" : "h-4 w-4")} />
+        <Icon
+          className={cn(
+            "shrink-0 transition-transform duration-150",
+            collapsed ? "h-4.5 w-4.5" : "h-4 w-4",
+          )}
+        />
       </span>
 
       {!collapsed && (
         <>
-          <span className="flex-1 truncate tracking-[-0.01em] font-mono text-black">{label}</span>
+          <span className="flex-1 truncate tracking-[-0.01em] font-mono text-black">
+            {label}
+          </span>
 
           {domain && (
-            <span className={cn(
-              "ml-auto h-1.5 w-1.5 rounded-full transition-opacity duration-200",
-              DOMAIN_STYLES[domain].dot,
-              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-40",
-            )} />
+            <span
+              className={cn(
+                "ml-auto h-1.5 w-1.5 rounded-full transition-opacity duration-200",
+                DOMAIN_STYLES[domain].dot,
+                isActive ? "opacity-100" : "opacity-0 group-hover:opacity-40",
+              )}
+            />
           )}
 
           {badge != null && badge > 0 && (
@@ -189,7 +248,12 @@ function NavItem({
           )}
         >
           {domain && (
-            <span className={cn("h-1.5 w-1.5 rounded-full", DOMAIN_STYLES[domain].dot)} />
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                DOMAIN_STYLES[domain].dot,
+              )}
+            />
           )}
           {label}
         </span>
@@ -202,7 +266,13 @@ function NavItem({
 // SECTION LABEL
 // ──────────────────────────────────────────────────────────────────────────
 
-function SectionLabel({ label, collapsed }: { label: string; collapsed: boolean }) {
+function SectionLabel({
+  label,
+  collapsed,
+}: {
+  label: string;
+  collapsed: boolean;
+}) {
   if (collapsed) {
     return <div className="mx-auto my-2 h-px w-6 bg-border/60" />;
   }
@@ -217,72 +287,183 @@ function SectionLabel({ label, collapsed }: { label: string; collapsed: boolean 
 // USER PROFILE
 // ──────────────────────────────────────────────────────────────────────────
 
-function UserProfile({ collapsed }: { collapsed: boolean }) {
-  const { user } = useAuth();
+export function UserProfile({ collapsed }: any) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Get initials
   const initials =
     user?.fullName
       ?.split(" ")
       .map((n: string) => n[0])
       .join("")
       .toUpperCase() ?? "U";
-  const firstName = user?.fullName?.split(" ")[0] ?? "User";
 
+  const firstName = user?.fullName?.split(" ")[0] ?? "User";
+  const isPro = user?.plan === "pro" || user?.plan === "enterprise";
+  const role = user?.role ?? "Farm Owner";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.push("/login");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
+
+  // ── Collapsed View ──
+  if (collapsed) {
+    return (
+      <div className="relative border-t border-border/60 transition-all duration-200 px-2 py-3">
+        {/* Subtle glow */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+        <div className="flex flex-col items-center gap-2">
+          {/* Avatar with tooltip-like indicator */}
+          <div className="relative group">
+            <Avatar className="h-9 w-9 ring-2 ring-primary/10 ring-offset-2 ring-offset-background transition-all duration-300 group-hover:ring-primary/30 group-hover:scale-105">
+              <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary text-xs font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500 ring-1 ring-emerald-500/20" />
+          </div>
+
+          {/* Logout button with icon only - beautiful circular button */}
+          <Button
+            aria-label="Sign out"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8 rounded-full",
+              "text-muted-foreground/50 transition-all duration-300",
+              "hover:bg-gradient-to-br hover:from-destructive/10 hover:to-destructive/5",
+              "hover:text-destructive hover:scale-110",
+              "group relative",
+            )}
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Expanded View ──
   return (
-    <div
-      className={cn(
-        "relative border-t border-border/60 transition-all duration-200",
-        collapsed ? "px-2 py-3" : "px-3 py-3",
-      )}
-    >
-      {/* Subtle inner glow at the top edge */}
+    <div className="relative border-t border-border/60 transition-all duration-200 px-3 py-3">
+      {/* Subtle glow */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-      <div className={cn("flex items-center gap-2.5", collapsed && "flex-col gap-2")}>
-        <div className="relative flex-shrink-0">
-          <Avatar className={cn(collapsed ? "h-8 w-8" : "h-8 w-8")}>
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {/* Online indicator */}
-          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background bg-success" />
-        </div>
-
-        {!collapsed && (
-          <div className="flex flex-1 min-w-0 flex-col">
-            <p className="text-sm font-semibold leading-tight truncate tracking-[-0.01em]">
-              {firstName}
-            </p>
-            <p className="text-[11px] text-muted-foreground/70 truncate">Farm Owner</p>
-          </div>
-        )}
-
-        {!collapsed && (
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <DropdownMenuTrigger asChild>
           <button
-            aria-label="Sign out"
             className={cn(
-              "ml-auto flex items-center justify-center rounded-lg p-1.5",
-              "text-muted-foreground/60 transition-all duration-150",
-              "hover:bg-destructive/10 hover:text-destructive",
+              "flex w-full items-center gap-2.5 rounded-xl",
+              "transition-all duration-300",
+              "hover:bg-muted/50",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20",
+              "group",
+              isDropdownOpen && "bg-muted/50",
             )}
           >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
-        )}
+            <div className="relative flex-shrink-0">
+              <Avatar className="h-9 w-9 ring-2 ring-primary/10 ring-offset-2 ring-offset-background transition-all duration-300 group-hover:ring-primary/30">
+                <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary text-xs font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500 ring-1 ring-emerald-500/20" />
+            </div>
 
-        {collapsed && (
-          <button
-            aria-label="Sign out"
-            className={cn(
-              "flex items-center justify-center rounded-lg p-1.5 w-full",
-              "text-muted-foreground/60 transition-all duration-150",
-              "hover:bg-destructive/10 hover:text-destructive",
-            )}
-          >
-            <LogOut className="h-3.5 w-3.5" />
+            <div className="flex flex-1 min-w-0 flex-col items-start">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold leading-tight truncate tracking-[-0.01em] text-foreground">
+                  {firstName}
+                </p>
+                {isPro && (
+                  <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-1.5 py-0.5 text-[8px] font-bold uppercase text-white shadow-sm shadow-amber-500/20">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Pro
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground/70 truncate flex items-center gap-1.5">
+                <Circle className="h-1.5 w-1.5 fill-emerald-500 text-emerald-500" />
+                {role}
+              </p>
+            </div>
+
+            <div className="flex-shrink-0 text-muted-foreground/40 transition-transform duration-300 group-hover:text-primary/60">
+              {isDropdownOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
           </button>
-        )}
-      </div>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          side="top"
+          sideOffset={8}
+          className="w-56 rounded-xl border-muted/50 shadow-xl shadow-black/5"
+        >
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-semibold">{user?.fullName}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
+            </div>
+          </DropdownMenuLabel>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/profile" className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/help" className="flex items-center gap-2">
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              <span>Help & Support</span>
+            </Link>
+          </DropdownMenuItem>
+
+          {isPro && (
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/billing" className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <span>Billing</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
@@ -348,12 +529,19 @@ function SidebarLogo({
         )}
       >
         {/* Icon mark */}
-        <div className={cn(
-          "flex items-center justify-center rounded-lg bg-primary transition-all duration-200",
-          "group-hover:shadow-md group-hover:shadow-primary/30",
-          collapsed ? "h-8 w-8" : "h-7 w-7",
-        )}>
-          <Leaf className={cn("text-primary-foreground", collapsed ? "h-4 w-4" : "h-3.5 w-3.5")} />
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-lg bg-primary transition-all duration-200",
+            "group-hover:shadow-md group-hover:shadow-primary/30",
+            collapsed ? "h-8 w-8" : "h-7 w-7",
+          )}
+        >
+          <Leaf
+            className={cn(
+              "text-primary-foreground",
+              collapsed ? "h-4 w-4" : "h-3.5 w-3.5",
+            )}
+          />
         </div>
 
         {!collapsed && (
@@ -387,7 +575,12 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
+function Sidebar({
+  collapsed,
+  onToggle,
+  mobileOpen,
+  onMobileClose,
+}: SidebarProps) {
   return (
     <>
       {/* Mobile backdrop */}
@@ -428,7 +621,9 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProp
             ))}
           </div>
 
-          <div className={cn("mt-2 space-y-0.5", collapsed ? "px-1.5" : "px-2")}>
+          <div
+            className={cn("mt-2 space-y-0.5", collapsed ? "px-1.5" : "px-2")}
+          >
             <SectionLabel label="Account" collapsed={collapsed} />
             {NAV_SECONDARY.map((item) => (
               <NavItem
@@ -514,9 +709,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         >
           <Bell className="h-4 w-4" />
-          <span className={cn(
-            "absolute right-1.5 top-1.5 flex h-1.5 w-1.5",
-          )}>
+          <span className={cn("absolute right-1.5 top-1.5 flex h-1.5 w-1.5")}>
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
           </span>
@@ -579,9 +772,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <TopBar onMenuClick={() => setMobileOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto bg-muted/30">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto bg-muted/30">{children}</main>
       </div>
     </div>
   );

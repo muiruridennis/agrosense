@@ -17,7 +17,7 @@ import { RecordsModule } from './records/records.module';
 import { WeatherModule } from './weather/weather.module';
 import { CropsModule } from './crops/crops.module';
 import { DiseaseEngineModule } from './disease-engine/disease-engine.module';
-import { NotificationsModule } from './notifications/notifications.module';
+import { NotificationModule } from './notifications/notifications.module';
 import { ReportsModule } from './reports/reports.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CreditProfileModule } from './credit-profile/credit-profile.module';
@@ -34,9 +34,21 @@ import { HealthEventModule } from './health-event/health-event.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { FinanceModule } from './finance/finance.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { PricingModule } from './pricing/pricing.module';
+import { SmsModule } from './sms/sms.module';
+import { EmailModule } from './email/email.module';
+import { InAppModule } from './inapp/inapp.module';
+import { PushModule } from './push/push.module';
+import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
+import { EmailVerificationModule } from './email-verification/email-verification.module';
+import { PasswordResetModule } from './password-reset/password-reset.module';
 
 @Module({
   imports: [
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 1. INFRASTRUCTURE / CORE MODULES
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -59,28 +71,49 @@ import { IntegrationsModule } from './integrations/integrations.module';
         JWT_REFRESH_EXPIRY: Joi.string().default('30d'),
 
         // Optional — SMS and push
-        AT_API_KEY: Joi.string().allow('').optional(),
-        AT_USERNAME: Joi.string().default('sandbox'),
-        FCM_SERVER_KEY: Joi.string().allow('').optional(),
-        FCM_PROJECT_ID: Joi.string().allow('').optional(),
+        // AT_API_KEY: Joi.string().allow('').optional(),
+        // AT_USERNAME: Joi.string().default('sandbox'),
+        // FCM_SERVER_KEY: Joi.string().allow('').optional(),
+        // FCM_PROJECT_ID: Joi.string().allow('').optional(),
 
         // Groq AI
         GROQ_API_KEY: Joi.string().required(),
 
         WEATHER_API_URL: Joi.string().uri().required(),
+
+        AFRICAS_TALKING_USERNAME: Joi.string().required(),
+        AFRICAS_TALKING_API_KEY: Joi.string().required(),
+
+        SMTP_HOST: Joi.string().required(),
+        SMTP_PORT: Joi.number().required(),
+        SMTP_SECURE: Joi.boolean().required(),
+        SMTP_USER: Joi.string().required(),
+        SMTP_PASS: Joi.string().required(),
+        MAIL_FROM_EMAIL: Joi.string().email().required(),
+        MAIL_FROM_NAME: Joi.string().required(),
+
+        FCM_PROJECT_ID: Joi.string().required(),
+        FCM_CLIENT_EMAIL: Joi.string().email().required(),
+        FCM_PRIVATE_KEY: Joi.string().required(),
+
+        JWT_VERIFICATION_TOKEN_SECRET: Joi.string().required(),
+        JWT_VERIFICATION_TOKEN_EXPIRATION_TIME: Joi.number().required(),
+        PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES: Joi.number(),
       }),
     }),
+
     EventEmitterModule.forRoot({
-      global: true, // optional, but recommended
+      global: true,
     }),
+
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         redis: {
           host: config.get<string>('REDIS_HOST', 'redis'),
           port: config.get<number>('REDIS_PORT', 6379),
-          lazyConnect: true,
+          // lazyConnect: true,
           maxRetriesPerRequest: null,
-          enableReadyCheck: false,
+          // enableReadyCheck: false,
         },
         defaultJobOptions: {
           attempts: 3,
@@ -91,6 +124,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
       }),
       inject: [ConfigService],
     }),
+
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: (config: ConfigService) => ({
@@ -105,52 +139,65 @@ import { IntegrationsModule } from './integrations/integrations.module';
       inject: [ConfigService],
     }),
 
-    // ── Bull queues ────────────────────────────────────────────────────────
-    BullModule.forRootAsync({
-      useFactory: (config: ConfigService) => ({
-        redis: {
-          host: config.get<string>('REDIS_HOST', 'redis'),
-          port: config.get<number>('REDIS_PORT', 6379),
-          lazyConnect: true,
-          maxRetriesPerRequest: null,
-          enableReadyCheck: false,
-        },
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-          removeOnComplete: 20,
-          removeOnFail: 10,
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 2. FEATURE MODULES (Dependencies for JobsModule)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    // Core feature modules
     UsersModule,
     FarmsModule,
     AuthModule,
+
+    // Channel modules (JobsModule depends on these)
+    SmsModule, // ✅ Moved UP
+    EmailModule, // ✅ Moved UP
+    InAppModule, // ✅ Moved UP
+    PushModule, // ✅ Moved UP
+
+    // Domain modules
+    PoultryModule,
+    DairyModule,
+    SmallRuminantsModule,
+    CropsModule,
+    InventoryModule,
+    FinanceModule,
+    HealthEventModule,
+    FarmMembersModule,
+    IntegrationsModule,
+    PricingModule,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 3. MODULES THAT JOBSMODULE DEPENDS ON
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
     RecommendationsModule,
     AlertsModule,
     RecordsModule,
     WeatherModule,
-    CropsModule,
     DiseaseEngineModule,
-    NotificationsModule,
+    NotificationModule, // ✅ JobsModule needs this
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 4. JOBS MODULE (LAST - after all dependencies)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    JobsModule, // ✅ All dependencies are now loaded!
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 5. OTHER MODULES
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
     ReportsModule,
-    JobsModule,
     CreditProfileModule,
     CommonModule,
     PlotsModule,
-    DatabaseModule,
     HealthModule,
     AdvisorModule,
-    PoultryModule,
-    FarmMembersModule,
-    DairyModule,
-    SmallRuminantsModule,
-    HealthEventModule,
-    InventoryModule,
-    FinanceModule,
-    IntegrationsModule,
+    FeatureFlagsModule,
+    EmailVerificationModule,
+    PasswordResetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

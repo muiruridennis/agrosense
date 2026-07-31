@@ -4,6 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { isProtectedPath } from './route-config';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,14 @@ class ApiClient {
       .catch((refreshErr) => {
         this.queue.forEach((item) => item.reject(refreshErr));
         this.queue = [];
-        if (typeof window !== 'undefined') {
+        // Only hard-redirect if we're actually somewhere that requires
+        // auth. A public page (marketing, pricing, etc.) making an
+        // optional "who am I" call that fails shouldn't yank the user
+        // away from a page they're allowed to be looking at.
+        if (
+          typeof window !== 'undefined' &&
+          isProtectedPath(window.location.pathname)
+        ) {
           window.location.href = '/login';
         }
         return Promise.reject(refreshErr);

@@ -52,7 +52,9 @@ export function FlockDetailsSheet({
 
   const placementDate = new Date(flock.placementDate);
   const today = new Date();
-  const daysInProduction = Math.floor((today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysInProduction = Math.floor(
+    (today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const targetDays = flock.targetDays || 42;
   const daysRemaining = Math.max(0, targetDays - daysInProduction);
   const progressPercent = Math.min(100, (daysInProduction / targetDays) * 100);
@@ -63,7 +65,8 @@ export function FlockDetailsSheet({
   const isMortalityHigh = mortalityRate > expectedMortality * 1.2;
 
   const avgWeight = flock.sales?.length
-    ? flock.sales.reduce((sum, sale) => sum + sale.pricePerBird, 0) / flock.sales.length
+    ? flock.sales.reduce((sum, sale) => sum + sale.pricePerBird, 0) /
+      flock.sales.length
     : null;
 
   const totalRevenue = flock.revenueTotal || 0;
@@ -79,16 +82,20 @@ export function FlockDetailsSheet({
             <div>
               <SheetTitle className="text-xl">{flock.breed}</SheetTitle>
               <SheetDescription>
-                {houseName} · {flock.type.charAt(0).toUpperCase() + flock.type.slice(1)} Flock
+                {houseName} ·{" "}
+                {flock.type.charAt(0).toUpperCase() + flock.type.slice(1)} Flock
               </SheetDescription>
             </div>
             <div className="flex gap-2">
-              <Badge className={cn(
-                "text-[10px] capitalize",
-                flock.status === "active" && "bg-emerald-100 text-emerald-700",
-                flock.status === "closed" && "bg-gray-100 text-gray-700",
-                flock.status === "planned" && "bg-blue-100 text-blue-700"
-              )}>
+              <Badge
+                className={cn(
+                  "text-[10px] capitalize",
+                  flock.status === "active" &&
+                    "bg-emerald-100 text-emerald-700",
+                  flock.status === "closed" && "bg-gray-100 text-gray-700",
+                  flock.status === "planned" && "bg-blue-100 text-blue-700",
+                )}
+              >
                 {flock.status}
               </Badge>
               <Badge variant="outline" className="text-[10px] capitalize">
@@ -113,7 +120,9 @@ export function FlockDetailsSheet({
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg bg-muted/30 p-3 text-center">
                 <Users className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
-                <p className="text-2xl font-bold">{flock.currentCount.toLocaleString()}</p>
+                <p className="text-2xl font-bold">
+                  {flock.currentCount.toLocaleString()}
+                </p>
                 <p className="text-xs text-muted-foreground">Current Birds</p>
                 <p className="text-[10px] text-muted-foreground/60">
                   From {flock.initialCount.toLocaleString()} placed
@@ -122,7 +131,9 @@ export function FlockDetailsSheet({
               <div className="rounded-lg bg-muted/30 p-3 text-center">
                 <Calendar className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
                 <p className="text-2xl font-bold">{daysInProduction}</p>
-                <p className="text-xs text-muted-foreground">Days in Production</p>
+                <p className="text-xs text-muted-foreground">
+                  Days in Production
+                </p>
                 {flock.type === "broilers" && (
                   <p className="text-[10px] text-muted-foreground/60">
                     {daysRemaining} days remaining
@@ -135,12 +146,19 @@ export function FlockDetailsSheet({
             {flock.type === "broilers" && (
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Production Progress</span>
-                  <span className="font-medium">{Math.round(progressPercent)}%</span>
+                  <span className="text-muted-foreground">
+                    Production Progress
+                  </span>
+                  <span className="font-medium">
+                    {Math.round(progressPercent)}%
+                  </span>
                 </div>
                 <Progress value={progressPercent} className="h-2" />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>Placement: {new Date(flock.placementDate).toLocaleDateString()}</span>
+                  <span>
+                    Placement:{" "}
+                    {new Date(flock.placementDate).toLocaleDateString()}
+                  </span>
                   <span>Target Day {targetDays}</span>
                 </div>
               </div>
@@ -193,8 +211,10 @@ export function FlockDetailsSheet({
                       High Mortality Alert
                     </p>
                     <p className="text-xs text-rose-600 dark:text-rose-300 mt-0.5">
-                      Mortality rate {mortalityRate.toFixed(1)}% exceeds target {expectedMortality}%.
-                      {mortalityCount} birds lost out of {flock.initialCount.toLocaleString()}
+                      Mortality rate {mortalityRate.toFixed(1)}% exceeds target{" "}
+                      {expectedMortality}%.
+                      {mortalityCount} birds lost out of{" "}
+                      {flock.initialCount.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -203,22 +223,30 @@ export function FlockDetailsSheet({
 
             {/* Key Dates */}
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Key Dates</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Key Dates
+              </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <p className="text-muted-foreground">Placement Date</p>
-                  <p className="font-medium">{new Date(flock.placementDate).toLocaleDateString()}</p>
+                  <p className="font-medium">
+                    {new Date(flock.placementDate).toLocaleDateString()}
+                  </p>
                 </div>
                 {flock.closedAt && (
                   <div>
                     <p className="text-muted-foreground">Closed Date</p>
-                    <p className="font-medium">{new Date(flock.closedAt).toLocaleDateString()}</p>
+                    <p className="font-medium">
+                      {new Date(flock.closedAt).toLocaleDateString()}
+                    </p>
                   </div>
                 )}
                 {flock.productionStartWeek && (
                   <div>
                     <p className="text-muted-foreground">Production Start</p>
-                    <p className="font-medium">Week {flock.productionStartWeek}</p>
+                    <p className="font-medium">
+                      Week {flock.productionStartWeek}
+                    </p>
                   </div>
                 )}
                 {flock.targetDays && (
@@ -233,7 +261,9 @@ export function FlockDetailsSheet({
             {/* Notes */}
             {flock.notes && (
               <div className="rounded-lg bg-muted/20 p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  Notes
+                </p>
                 <p className="text-sm">{flock.notes}</p>
               </div>
             )}
@@ -302,16 +332,24 @@ export function FlockDetailsSheet({
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>Mortality Rate</span>
-                    <span className={cn(
-                      mortalityRate > expectedMortality ? "text-rose-600" : "text-emerald-600"
-                    )}>
+                    <span
+                      className={cn(
+                        mortalityRate > expectedMortality
+                          ? "text-rose-600"
+                          : "text-emerald-600",
+                      )}
+                    >
                       {mortalityRate.toFixed(1)}% / {expectedMortality}% target
                     </span>
                   </div>
                   <Progress
                     value={(mortalityRate / expectedMortality) * 100}
                     className="h-1.5"
-                    indicatorClassName={mortalityRate > expectedMortality ? "bg-rose-500" : "bg-emerald-500"}
+                    indicatorClassName={
+                      mortalityRate > expectedMortality
+                        ? "bg-rose-500"
+                        : "bg-emerald-500"
+                    }
                   />
                 </div>
 
@@ -319,7 +357,10 @@ export function FlockDetailsSheet({
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Average Weight</span>
-                      <span>{avgWeight.toFixed(1)} kg / {flock.targetWeightKg} kg target</span>
+                      <span>
+                        {avgWeight.toFixed(1)} kg / {flock.targetWeightKg} kg
+                        target
+                      </span>
                     </div>
                     <Progress
                       value={(avgWeight / (flock.targetWeightKg || 2.2)) * 100}
@@ -353,15 +394,21 @@ export function FlockDetailsSheet({
                 </div>
                 <div className="space-y-2">
                   {flock.sales.map((sale, idx) => (
-                    <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between border-b pb-2 last:border-0"
+                    >
                       <div>
                         <p className="text-sm font-medium">{sale.buyer}</p>
                         <p className="text-xs text-muted-foreground">
-                          {sale.quantity} birds · {new Date(sale.saleDate).toLocaleDateString()}
+                          {sale.quantity} birds ·{" "}
+                          {new Date(sale.saleDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold">KES {sale.totalAmount.toLocaleString()}</p>
+                        <p className="text-sm font-semibold">
+                          KES {sale.totalAmount.toLocaleString()}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           KES {sale.pricePerBird}/bird
                         </p>
