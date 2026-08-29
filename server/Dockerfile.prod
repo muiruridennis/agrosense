@@ -25,4 +25,4 @@ RUN chmod +x start.sh && \
     addgroup -S app && adduser -S app -G app
 USER app
 EXPOSE 3001
-CMD ["./start.sh"]
+CMD ["node", "dist/main.js"]
