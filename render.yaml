@@ -18,18 +18,21 @@ services:
     dockerContext: ./server
     plan: free
     region: oregon
-    healthCheckPath: /health
+    # main.ts applies app.setGlobalPrefix('api/v1') to every route,
+    # including health — the real endpoint is /api/v1/health, not /health.
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "3001"
-      
-      # Database connection
       - key: DATABASE_URL
         fromDatabase:
           name: agrosense-postgres
           property: connectionString
+      # These individual fields feed ./typeOrm.config.ts (the CLI migration
+      # datasource), which is a separate file from the NestJS module config
+      # above and reads discrete host/port/user/pass rather than a URL.
       - key: POSTGRES_HOST
         fromDatabase:
           name: agrosense-postgres
@@ -50,31 +53,16 @@ services:
         fromDatabase:
           name: agrosense-postgres
           property: database
-      
-      # Redis
       - key: REDIS_URL
         fromService:
           type: keyvalue
           name: agrosense-redis
           property: connectionString
-      
-      # CORS
       - key: CORS_ORIGIN
         value: https://agrosense-client.onrender.com
-      - key: FRONTEND_URL
-        value: https://agrosense-client.onrender.com
-      
-      # JWT Expiry Settings
-      - key: JWT_ACCESS_EXPIRY
-        value: "1h"
-      - key: JWT_REFRESH_EXPIRY
-        value: "30d"
-      - key: JWT_VERIFICATION_TOKEN_EXPIRATION_TIME
-        value: "21600"
-      - key: PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES
-        value: "30"
-      
-      # Secrets (sync: false = set in dashboard)
+      # Remaining secrets (JWT secrets, SMTP, Africa's Talking, FCM, GROQ,
+      # weather API) are marked sync: false so Render prompts you to fill
+      # them in via the dashboard rather than committing them here.
       - key: JWT_ACCESS_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
@@ -117,7 +105,6 @@ services:
     dockerContext: ./client
     plan: free
     region: oregon
-    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
