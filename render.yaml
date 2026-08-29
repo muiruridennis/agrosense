@@ -1,13 +1,13 @@
 databases:
   - name: agrosense-postgres
-    plan: starter
+    plan: free
     region: oregon
     postgresMajorVersion: "17"
 
 services:
   - type: keyvalue
     name: agrosense-redis
-    plan: starter
+    plan: free
     region: oregon
     ipAllowList: []
 
@@ -16,9 +16,15 @@ services:
     runtime: docker
     dockerfilePath: ./server/Dockerfile.prod
     dockerContext: ./server
-    plan: starter
+    plan: free
     region: oregon
     healthCheckPath: /health
+    # preDeployCommand requires a paid instance, so on the free tier we
+    # fold the migration into the container's start command instead.
+    # TypeORM tracks applied migrations, so re-running this on every
+    # cold-start restart (free services spin down after 15 min idle) is
+    # a safe no-op once migrations are already applied.
+    dockerCommand: sh -c "npm run migration:run && node dist/main.js"
     envVars:
       - key: NODE_ENV
         value: production
@@ -78,7 +84,7 @@ services:
     runtime: docker
     dockerfilePath: ./client/Dockerfile.prod
     dockerContext: ./client
-    plan: starter
+    plan: free
     region: oregon
     envVars:
       - key: NODE_ENV
