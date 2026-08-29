@@ -59,6 +59,12 @@ services:
           name: agrosense-redis
           property: connectionString
       - key: CORS_ORIGIN
+        # TODO: update this once agrosense-client deploys and its real
+        # URL is confirmed — Render will likely assign a random suffix
+        # here too, the same way it did for agrosense-server (-mrib).
+        value: https://agrosense-client.onrender.com
+      - key: FRONTEND_URL
+        # Same TODO as CORS_ORIGIN above — update together.
         value: https://agrosense-client.onrender.com
       # Remaining secrets (JWT secrets, SMTP, Africa's Talking, FCM, GROQ,
       # weather API) are marked sync: false so Render prompts you to fill
@@ -105,8 +111,19 @@ services:
     dockerContext: ./client
     plan: free
     region: oregon
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
+      # Next's standalone server.js binds to process.env.HOSTNAME if set,
+      # falling back to 0.0.0.0 otherwise. Render sets its own HOSTNAME
+      # pointing at the container's internal name, which overrides that
+      # default and makes the app listen on an address nothing external
+      # can reach. Forcing it here overrides Render's value back to
+      # 0.0.0.0 so the app actually accepts outside connections.
+      - key: HOSTNAME
+        value: "0.0.0.0"
+      # Render assigned agrosense-server a -mrib suffix rather than the
+      # plain name — using the real confirmed URL here, not a guess.
       - key: NEXT_PUBLIC_API_URL
         value: https://agrosense-server-mrib.onrender.com/api/v1
