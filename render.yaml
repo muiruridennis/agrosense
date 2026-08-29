@@ -1,0 +1,87 @@
+databases:
+  - name: agrosense-postgres
+    plan: starter
+    region: oregon
+    postgresMajorVersion: "17"
+
+services:
+  - type: keyvalue
+    name: agrosense-redis
+    plan: starter
+    region: oregon
+    ipAllowList: []
+
+  - type: web
+    name: agrosense-server
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile.prod
+    dockerContext: ./server
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agrosense-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: agrosense-redis
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://agrosense-client.onrender.com
+      # Remaining secrets (JWT secrets, SMTP, Africa's Talking, FCM, GROQ,
+      # weather API) are marked sync: false so Render prompts you to fill
+      # them in via the dashboard rather than committing them here.
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_VERIFICATION_TOKEN_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: WEATHER_API_URL
+        sync: false
+      - key: AFRICAS_TALKING_USERNAME
+        sync: false
+      - key: AFRICAS_TALKING_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM_EMAIL
+        sync: false
+      - key: MAIL_FROM_NAME
+        sync: false
+      - key: FCM_PROJECT_ID
+        sync: false
+      - key: FCM_CLIENT_EMAIL
+        sync: false
+      - key: FCM_PRIVATE_KEY
+        sync: false
+
+  - type: web
+    name: agrosense-client
+    runtime: docker
+    dockerfilePath: ./client/Dockerfile.prod
+    dockerContext: ./client
+    plan: starter
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://agrosense-server.onrender.com/api/v1

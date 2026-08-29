@@ -7,22 +7,30 @@ import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
-
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create(AppModule);
+
+  // Render terminates TLS at its edge proxy — without this, Express won't
+  // recognize the connection as secure, and any `secure: true` cookies
+  // (e.g. refresh tokens) silently fail to be set.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   app.use(cookieParser());
 
-  // ✅ get config service
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api/v1');
 
+  // Supports one or multiple comma-separated origins, e.g.
+  // CORS_ORIGIN=https://agrosense-client.onrender.com,https://app.agrosense.co
+  const corsOrigin = configService.get<string>('CORS_ORIGIN');
+  const allowedOrigins = corsOrigin?.split(',').map((o) => o.trim());
 
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN'),
-    methods: ['GET', 'POST', 'PATCH', 'DELETE','PUT', 'OPTIONS'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
@@ -40,9 +48,11 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT') ?? 3001;
 
-  await app.listen(port);
+  // Bind to 0.0.0.0 explicitly — required for Render (and most container
+  // platforms) to route traffic to the container.
+  await app.listen(port, '0.0.0.0');
 
-  logger.log(`Application running on http://localhost:${port}/api/v1`);
+  logger.log(`Application running on port ${port} (prefix: /api/v1)`);
 }
 
 bootstrap().catch((err) => {

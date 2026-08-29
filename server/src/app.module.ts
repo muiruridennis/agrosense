@@ -39,6 +39,7 @@ import { RecommendationModule } from './recommendation/recommendation.module';
 import { MedicationModule } from './medication/medication.module';
 import { VaccinationModule } from './vaccination/vaccination.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { parseRedisUrl } from './common/redis-url.util';
 
 @Module({
   imports: [
@@ -104,35 +105,47 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     }),
 
     BullModule.forRootAsync({
-      useFactory: (config: ConfigService) => ({
-        redis: {
-          host: config.get<string>('REDIS_HOST', 'redis'),
-          port: config.get<number>('REDIS_PORT', 6379),
-          // lazyConnect: true,
-          maxRetriesPerRequest: null,
-          // enableReadyCheck: false,
-        },
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-          removeOnComplete: 20,
-          removeOnFail: 10,
-        },
-      }),
+      useFactory: (config: ConfigService) => {
+        const redisUrl = config.get<string>('REDIS_URL');
+        return {
+          redis: {
+            ...(redisUrl
+              ? parseRedisUrl(redisUrl)
+              : {
+                  host: config.get<string>('REDIS_HOST', 'redis'),
+                  port: config.get<number>('REDIS_PORT', 6379),
+                }),
+            maxRetriesPerRequest: null,
+          },
+          defaultJobOptions: {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: 20,
+            removeOnFail: 10,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
 
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: (config: ConfigService) => ({
-        store: redisStore,
-        host: config.get<string>('REDIS_HOST', 'redis'),
-        port: config.get<number>('REDIS_PORT', 6379),
-        ttl: 600,
-        lazyConnect: true,
-        maxRetriesPerRequest: null,
-        enableReadyCheck: false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const redisUrl = config.get<string>('REDIS_URL');
+        return {
+          store: redisStore,
+          ...(redisUrl
+            ? parseRedisUrl(redisUrl)
+            : {
+                host: config.get<string>('REDIS_HOST', 'redis'),
+                port: config.get<number>('REDIS_PORT', 6379),
+              }),
+          ttl: 600,
+          lazyConnect: true,
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
+        };
+      },
       inject: [ConfigService],
     }),
 
