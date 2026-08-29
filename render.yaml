@@ -9,7 +9,7 @@ services:
     name: agrosense-redis
     plan: free
     region: oregon
-    ipAllowList: []  # Allow all connections (Render internal)
+    ipAllowList: []
 
   - type: web
     name: agrosense-server
@@ -19,11 +19,11 @@ services:
     plan: free
     region: oregon
     healthCheckPath: /health
-    # ✅ Remove PORT env var - Render provides it automatically
-    dockerCommand: sh -c "npm run migration:run && node dist/main.js"
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: "3001"
       - key: DATABASE_URL
         fromDatabase:
           name: agrosense-postgres
@@ -35,10 +35,9 @@ services:
           property: connectionString
       - key: CORS_ORIGIN
         value: https://agrosense-client.onrender.com
-      # ✅ Add this for server-side session management
-      - key: COOKIE_SECURE
-        value: "true"
-      # Secrets (sync: false = set in dashboard)
+      # Remaining secrets (JWT secrets, SMTP, Africa's Talking, FCM, GROQ,
+      # weather API) are marked sync: false so Render prompts you to fill
+      # them in via the dashboard rather than committing them here.
       - key: JWT_ACCESS_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
@@ -81,7 +80,6 @@ services:
     dockerContext: ./client
     plan: free
     region: oregon
-    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
