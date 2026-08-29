@@ -28,6 +28,29 @@ services:
         fromDatabase:
           name: agrosense-postgres
           property: connectionString
+      # These individual fields feed ./typeOrm.config.ts (the CLI migration
+      # datasource), which is a separate file from the NestJS module config
+      # above and reads discrete host/port/user/pass rather than a URL.
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: agrosense-postgres
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: agrosense-postgres
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: agrosense-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: agrosense-postgres
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: agrosense-postgres
+          property: database
       - key: REDIS_URL
         fromService:
           type: keyvalue
