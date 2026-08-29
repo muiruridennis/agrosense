@@ -11,26 +11,14 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { AuthModule } from './auth/auth.module';
 import { FarmsModule } from './farms/farms.module';
 import { UsersModule } from './users/users.module';
-import { RecommendationsModule } from './recommendations/recommendations.module';
-import { AlertsModule } from './alerts/alerts.module';
 import { RecordsModule } from './records/records.module';
-import { WeatherModule } from './weather/weather.module';
-import { CropsModule } from './crops/crops.module';
-import { DiseaseEngineModule } from './disease-engine/disease-engine.module';
 import { NotificationModule } from './notifications/notifications.module';
-import { ReportsModule } from './reports/reports.module';
-import { JobsModule } from './jobs/jobs.module';
-import { CreditProfileModule } from './credit-profile/credit-profile.module';
+import { QueueModule } from './queues/queues.module';
 import { CommonModule } from './common/common.module';
-import { PlotsModule } from './plots/plots.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { AdvisorModule } from './advisor/advisor.module';
-import { PoultryModule } from './poultry/poultry.module';
 import { FarmMembersModule } from './farm-members/farm-members.module';
-import { DairyModule } from './dairy/dairy.module';
-import { SmallRuminantsModule } from './smallruminants/smallruminants.module';
-import { HealthEventModule } from './health-event/health-event.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { FinanceModule } from './finance/finance.module';
 import { IntegrationsModule } from './integrations/integrations.module';
@@ -42,6 +30,15 @@ import { PushModule } from './push/push.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { EmailVerificationModule } from './email-verification/email-verification.module';
 import { PasswordResetModule } from './password-reset/password-reset.module';
+import { PoultryHousesModule } from './poultry-houses/poultry-houses.module';
+import { FlockModule } from './flock/flock.module';
+import { FlockRecordsModule } from './flock-records/flock-records.module';
+import { FlockAnalyticsModule } from './flock-analytics/flock-analytics.module';
+import { InsightModule } from './insight/insight.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
+import { MedicationModule } from './medication/medication.module';
+import { VaccinationModule } from './vaccination/vaccination.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -142,7 +139,7 @@ import { PasswordResetModule } from './password-reset/password-reset.module';
     DatabaseModule,
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 2. FEATURE MODULES (Dependencies for JobsModule)
+    // 2. FEATURE MODULES (Dependencies for QueueModule)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     // Core feature modules
@@ -150,54 +147,43 @@ import { PasswordResetModule } from './password-reset/password-reset.module';
     FarmsModule,
     AuthModule,
 
-    // Channel modules (JobsModule depends on these)
+    // Channel modules (QueueModule depends on these)
     SmsModule, // ✅ Moved UP
     EmailModule, // ✅ Moved UP
     InAppModule, // ✅ Moved UP
     PushModule, // ✅ Moved UP
 
     // Domain modules
-    PoultryModule,
-    DairyModule,
-    SmallRuminantsModule,
-    CropsModule,
     InventoryModule,
     FinanceModule,
-    HealthEventModule,
     FarmMembersModule,
     IntegrationsModule,
     PricingModule,
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 3. MODULES THAT JOBSMODULE DEPENDS ON
+    // 3. MODULES THAT QueueModule DEPENDS ON
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    RecommendationsModule,
-    AlertsModule,
     RecordsModule,
-    WeatherModule,
-    DiseaseEngineModule,
-    NotificationModule, // ✅ JobsModule needs this
+    NotificationModule,
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 4. JOBS MODULE (LAST - after all dependencies)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    QueueModule,
 
-    JobsModule, // ✅ All dependencies are now loaded!
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 5. OTHER MODULES
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    ReportsModule,
-    CreditProfileModule,
     CommonModule,
-    PlotsModule,
     HealthModule,
     AdvisorModule,
     FeatureFlagsModule,
     EmailVerificationModule,
     PasswordResetModule,
+    PoultryHousesModule,
+    FlockModule,
+    FlockRecordsModule,
+    FlockAnalyticsModule,
+    InsightModule,
+    RecommendationModule,
+    MedicationModule,
+    VaccinationModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

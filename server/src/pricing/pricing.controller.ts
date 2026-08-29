@@ -20,12 +20,11 @@ import {
   PricingHistoryQueryDto,
 } from './dto/pricing.dto';
 import { JwtAuthenticationGuard } from '../auth/guards/jwt-authentication.guard';
-import { 
-  PRICING_QUEUE, 
-  ACTIVATE_SCHEDULED_PRICING_JOB 
-} from '../jobs/jobs.constants';
+import {
+  PRICING_QUEUE,
+  ACTIVATE_SCHEDULED_PRICING_JOB,
+} from '../queues/jobs.constants';
 import type { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
-
 
 @Controller('/farms/:farmId/pricing')
 @UseGuards(JwtAuthenticationGuard)
@@ -213,10 +212,10 @@ export class PricingController {
     await this.pricingQueue.add(
       ACTIVATE_SCHEDULED_PRICING_JOB,
       { farmId },
-      { 
-        attempts: 2, 
-        backoff: { type: 'exponential', delay: 5000 } 
-      }
+      {
+        attempts: 2,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
     );
 
     return {

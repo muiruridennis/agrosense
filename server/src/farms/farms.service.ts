@@ -4,26 +4,33 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { UsersService } from '../users/users.service';
-import { CreateFarmDto, UpdateFarmDto } from './dto/create-farm.dto';
-import { Farm } from './entities/farm.entity';
 import { FarmMembersService } from '../farm-members/farm-members.service';
 import { PostgresErrorCode } from '../database/postgresErrorCodes.enum';
+
+import { CreateFarmDto, UpdateFarmDto } from './dto/create-farm.dto';
+import { Farm } from './entities/farm.entity';
 
 @Injectable()
 export class FarmsService {
   constructor(
     @InjectRepository(Farm)
     private readonly farmRepository: Repository<Farm>,
+
     private readonly usersService: UsersService,
-    @Inject(forwardRef(() => FarmMembersService)) // ✅ Use forwardRef
+
+    @Inject(forwardRef(() => FarmMembersService))
     private readonly farmMembersService: FarmMembersService,
   ) {}
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CREATE
+  // ─────────────────────────────────────────────────────────────────────────
 
   async create(ownerId: string, dto: CreateFarmDto): Promise<Farm> {
     const queryRunner =
@@ -36,23 +43,38 @@ export class FarmsService {
       const owner = await this.usersService.getById(ownerId);
 
       const farm = queryRunner.manager.create(Farm, {
-        ...dto,
+        name: dto.name,
+        description: dto.description ?? null,
+
+        areaHectares: dto.areaHectares ?? null,
+
+        country: dto.country,
+        region: dto.region,
+        subRegion: dto.subRegion ?? null,
+
+        timezone: dto.timezone ?? 'Africa/Nairobi',
+
         ownerId: owner.id,
-        timezone: dto.timezone ?? 'UTC',
+
         geoPoint: dto.location
           ? {
               type: 'Point',
               coordinates: [dto.location.longitude, dto.location.latitude],
             }
           : null,
+
+        boundary: dto.boundary ?? null,
       });
 
-      const savedFarm = await queryRunner.manager.save(farm);
+      const savedFarm = await queryRunner.manager.save(Farm, farm);
 
+      /*
+       * Farm creation and owner membership must succeed together.
+       */
       await this.farmMembersService.addOwnerAsMember(
         savedFarm.id,
         ownerId,
-        queryRunner // ← pass it down
+        queryRunner,
       );
 
       await queryRunner.commitTransaction();
@@ -73,60 +95,94 @@ export class FarmsService {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // READ
+  // ─────────────────────────────────────────────────────────────────────────
+
   async findAllByOwner(ownerId: string): Promise<Farm[]> {
     return this.farmRepository.find({
-      where: { ownerId },
-      relations: [
-        'plots',
-        'plots.cropCycles',
-        'cows',
-        'poultryHouses',
-        'ruminants',
-        'stockItems',
-        'members',
-      ],
-      order: { createdAt: 'DESC' },
+      where: {
+        ownerId,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
     });
   }
 
   async findOne(id: string, ownerId: string): Promise<Farm> {
     const farm = await this.farmRepository.findOne({
-      where: { id },
-      relations: ['plots', 'members', 'stockItems', 'cows', 'poultryHouses', 'ruminants'],
+      where: {
+        id,
+      },
     });
-    if (!farm) throw new NotFoundException(`Farm ${id} not found`);
-    if (farm.ownerId !== ownerId) throw new ForbiddenException();
+
+    if (!farm) {
+      throw new NotFoundException(`Farm ${id} not found`);
+    }
+
+    if (farm.ownerId !== ownerId) {
+      throw new ForbiddenException('You do not have access to this farm');
+    }
+
     return farm;
   }
 
   async findOneById(id: string): Promise<Farm> {
     const farm = await this.farmRepository.findOne({
-      where: { id },
-      relations: ['plots', 'members', 'stockItems', 'cows', 'poultryHouses', 'ruminants'],
+      where: {
+        id,
+      },
     });
-    if (!farm) throw new NotFoundException(`Farm ${id} not found`);
+
+    if (!farm) {
+      throw new NotFoundException(`Farm ${id} not found`);
+    }
+
     return farm;
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // UPDATE
+  // ─────────────────────────────────────────────────────────────────────────
 
   async update(id: string, ownerId: string, dto: UpdateFarmDto): Promise<Farm> {
     const farm = await this.findOne(id, ownerId);
 
-    if (dto.location) {
+    const { location, boundary, ...farmData } = dto;
+
+    Object.assign(farm, farmData);
+
+    if (location) {
       farm.geoPoint = {
         type: 'Point',
-        coordinates: [dto.location.longitude, dto.location.latitude],
+        coordinates: [location.longitude, location.latitude],
       };
     }
 
-    const { location: _l, ...rest } = dto as any;
-    Object.assign(farm, rest);
+    if (boundary !== undefined) {
+      farm.boundary = {
+        type: 'Polygon',
+        coordinates: boundary.coordinates,
+      };
+    }
+
     return this.farmRepository.save(farm);
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // DELETE
+  // ─────────────────────────────────────────────────────────────────────────
+
   async remove(id: string, ownerId: string): Promise<void> {
     const farm = await this.findOne(id, ownerId);
+
     await this.farmRepository.remove(farm);
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // OWNERSHIP
+  // ─────────────────────────────────────────────────────────────────────────
 
   async transferOwnership(
     id: string,
@@ -134,9 +190,20 @@ export class FarmsService {
     newOwnerId: string,
   ): Promise<Farm> {
     const farm = await this.findOne(id, currentOwnerId);
+
+    /*
+     * Don't allow transferring to a non-existent user.
+     */
+    await this.usersService.getById(newOwnerId);
+
     farm.ownerId = newOwnerId;
+
     return this.farmRepository.save(farm);
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // GEOLOCATION
+  // ─────────────────────────────────────────────────────────────────────────
 
   async findNearbyFarms(
     longitude: number,
@@ -148,10 +215,17 @@ export class FarmsService {
       .where(
         `ST_DWithin(
           farm."geoPoint"::geography,
-          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+          ST_SetSRID(
+            ST_MakePoint(:longitude, :latitude),
+            4326
+          )::geography,
           :radius
         )`,
-        { lng: longitude, lat: latitude, radius: radiusKm * 1000 },
+        {
+          longitude,
+          latitude,
+          radius: radiusKm * 1000,
+        },
       )
       .getMany();
   }

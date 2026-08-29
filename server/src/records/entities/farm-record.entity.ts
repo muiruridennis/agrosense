@@ -1,6 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
-import { Farm } from '../../farms/entities/farm.entity';
 
 export enum RecordType {
   EXPENSE = 'expense',
@@ -76,9 +75,7 @@ export class FarmRecord extends BaseEntity {
   @Column({ type: 'uuid' })
   farmId!: string;
 
-  @ManyToOne(() => Farm, (farm) => farm.records, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'farmId' })
-  farm!: Farm;
+ 
 
   // Soft delete support for audit trails and referential integrity
   @Index('idx_farm_records_deleted')

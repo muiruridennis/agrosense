@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue } from '@nestjs/bull';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import type { Queue } from 'bull';
 
 import { Notification } from './entities/notification.entity';
@@ -22,7 +22,10 @@ import { NotificationPriority, NotificationStatus } from './enums';
 import { SendNotificationDto } from './dtos/send-notification.dto';
 
 import { NotificationPreferencesService } from './notification-preferences.service';
-import { NOTIFICATION_QUEUE, NOTIFICATION_JOBS } from '../jobs/jobs.constants';
+import {
+  NOTIFICATION_QUEUE,
+  NOTIFICATION_JOBS,
+} from '../queues/jobs.constants';
 
 /**
  * NotificationService
@@ -125,6 +128,40 @@ export class NotificationService {
       jobsQueued,
       channels: enabledChannels,
     };
+  }
+
+  /**
+   * Has a notification already been sent for this category+reference+user?
+   *
+   * Deliberately NOT built into send() itself — send() is also called
+   * directly by the /notifications/send endpoint and other one-off
+   * callers that should NOT be silently deduped. This is an opt-in guard
+   * for callers (recurring sweeps, event-triggered notifications) that
+   * specifically want "at most once per category+reference+recipient"
+   * semantics — e.g. a daily cron shouldn't re-notify a farmer about the
+   * same overdue schedule every single day.
+   *
+   * This is check-then-act, which would normally be a TOCTOU risk on
+   * its own — safe here only because every caller so far (scheduled
+   * sweeps) already runs inside a single-instance lock (see
+   * SchedulerLockService.runExclusive). A caller without that guarantee
+   * would need its own concurrency protection before relying on this.
+   */
+  async hasBeenNotified(
+    category: string,
+    referenceId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const count = await this.notificationRepo.count({
+      where: {
+        category,
+        referenceId,
+        userId,
+        status: Not(NotificationStatus.CANCELLED),
+      },
+    });
+
+    return count > 0;
   }
 
   /**
@@ -254,8 +291,7 @@ export class NotificationService {
     };
   }
   async getDeliveryStats() {
-  const [pending, sending, delivered, failed, cancelled] =
-    await Promise.all([
+    const [pending, sending, delivered, failed, cancelled] = await Promise.all([
       this.deliveryRepo.count({
         where: { status: DeliveryStatus.PENDING },
       }),
@@ -273,26 +309,19 @@ export class NotificationService {
       }),
     ]);
 
-  const total =
-    pending +
-    sending +
-    delivered +
-    failed +
-    cancelled;
+    const total = pending + sending + delivered + failed + cancelled;
 
-  return {
-    total,
-    pending,
-    sending,
-    delivered,
-    failed,
-    cancelled,
-    successRate:
-      total === 0
-        ? 0
-        : Math.round((delivered / total) * 10000) / 100,
-  };
-}
+    return {
+      total,
+      pending,
+      sending,
+      delivered,
+      failed,
+      cancelled,
+      successRate:
+        total === 0 ? 0 : Math.round((delivered / total) * 10000) / 100,
+    };
+  }
 
   /**
    * Get notification history for a user
@@ -597,7 +626,7 @@ export class NotificationService {
         );
       }
     }
-   
+
     return jobsQueued;
   }
 
@@ -658,6 +687,3 @@ export class NotificationService {
   //   await this.notificationRepo.delete({ userId, read: true });
   // }
 }
-
-
- 

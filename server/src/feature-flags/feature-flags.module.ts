@@ -8,7 +8,7 @@ import { FeatureFlagsController } from './feature-flag.controller';
   imports: [TypeOrmModule.forFeature([FeatureFlag])],
   controllers: [FeatureFlagsController],
   providers: [FeatureFlagsService],
-  // Exported so JobsModule (NotificationsProcessor) and anywhere else that
+  // Exported so QueueModule (NotificationsProcessor) and anywhere else that
   // needs isEnabled() checks can import this module and inject the service.
   exports: [FeatureFlagsService],
 })

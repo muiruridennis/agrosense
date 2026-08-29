@@ -1,7 +1,7 @@
 // app/auth/confirmEmail/[token]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -29,8 +29,54 @@ import {
   useConfirmEmail,
   useResendConfirmation,
 } from "@/lib/hooks/useEmailVerification";
+import { ApiError } from "@/lib/api/client";
 
 type Status = "loading" | "success" | "expired" | "already" | "error";
+
+// ── Error Classifier ────────────────────────────────────────────────────
+
+const classifyError = (error: unknown): Status => {
+  let message = "Unknown error";
+
+  if (error instanceof ApiError) {
+    message = error.message;
+  } else if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === "string") {
+    message = error;
+  }
+
+  const lower = message.toLowerCase();
+
+  if (lower.includes("expired") || lower.includes("expire")) {
+    return "expired";
+  }
+
+  if (
+    lower.includes("already") ||
+    lower.includes("already verified") ||
+    lower.includes("verified already")
+  ) {
+    return "already";
+  }
+
+  return "error";
+};
+
+const getDisplayMessage = (error: unknown): string => {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Unable to verify your email.";
+};
+
+// ── Page ────────────────────────────────────────────────────────────────
 
 export default function ConfirmEmailPage() {
   const { token } = useParams<{ token: string }>();
@@ -45,44 +91,9 @@ export default function ConfirmEmailPage() {
   const [status, setStatus] = useState<Status>("loading");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      setMessage("Invalid verification link.");
-      return;
-    }
+  const hasAttempted = useRef(false);
 
-    // Try to extract email from token
-    const emailFromToken = extractEmailFromToken(token);
-    const emailFromQuery = searchParams.get("email");
-
-    const email = emailFromQuery || emailFromToken || "";
-    setUserEmail(email);
-
-    confirmEmail.mutate(token, {
-      onSuccess: () => {
-        setStatus("success");
-      },
-      onError: (error: any) => {
-        const msg =
-          error?.response?.data?.message ??
-          error?.message ??
-          "Unable to verify your email.";
-
-        setMessage(msg);
-
-        if (msg.toLowerCase().includes("expired")) {
-          setStatus("expired");
-        } else if (msg.toLowerCase().includes("already")) {
-          setStatus("already");
-        } else {
-          setStatus("error");
-        }
-      },
-    });
-  }, [token, searchParams]);
-
-  const extractEmailFromToken = (token: string): string | null => {
+  const extractEmailFromToken = useCallback((token: string): string | null => {
     try {
       const payload = token.split(".")[1];
       const decoded = JSON.parse(atob(payload));
@@ -90,7 +101,35 @@ export default function ConfirmEmailPage() {
     } catch {
       return null;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!token || hasAttempted.current) {
+      return;
+    }
+
+    hasAttempted.current = true;
+    setStatus("loading");
+
+    const emailFromToken = extractEmailFromToken(token);
+    const emailFromQuery = searchParams.get("email");
+    const email = emailFromQuery || emailFromToken || "";
+    setUserEmail(email);
+
+    confirmEmail.mutate(token, {
+      onSuccess: (data) => {
+        console.log("Email confirmed successfully:", data);
+        setStatus("success");
+        setMessage(data.message);
+      },
+      onError: (error) => {
+        // ✅ Clean error handling
+        const msg = getDisplayMessage(error);
+        setMessage(msg);
+        setStatus(classifyError(error));
+      },
+    });
+  }, [token, searchParams, confirmEmail, extractEmailFromToken]);
 
   const handleResend = async () => {
     const emailToUse = userEmail || emailInput;
@@ -98,14 +137,18 @@ export default function ConfirmEmailPage() {
       setShowEmailInput(true);
       return;
     }
-    await resend.mutateAsync(emailToUse);
+    try {
+      await resend.mutateAsync(emailToUse);
+    } catch {
+      // Error handled by hook
+    }
   };
 
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         {status === "loading" && <LoadingCard />}
-        {status === "success" && <SuccessCard />}
+        {status === "success" && <SuccessCard message={message} />}
         {status === "already" && <AlreadyVerifiedCard />}
         {status === "expired" && (
           <ExpiredCard
@@ -126,9 +169,7 @@ export default function ConfirmEmailPage() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* LOADING CARD                                                             */
-/* ────────────────────────────────────────────────────────────────────────── */
+// ── Loading Card ────────────────────────────────────────────────────────
 
 function LoadingCard() {
   return (
@@ -149,11 +190,9 @@ function LoadingCard() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* SUCCESS CARD                                                              */
-/* ────────────────────────────────────────────────────────────────────────── */
+// ── Success Card ────────────────────────────────────────────────────────
 
-function SuccessCard() {
+function SuccessCard({ message }: { message: string }) {
   return (
     <Card className="shadow-lg border-green-200 dark:border-green-900/50">
       <CardHeader className="text-center">
@@ -164,7 +203,7 @@ function SuccessCard() {
           Email verified! 🎉
         </CardTitle>
         <CardDescription>
-          Your AgroSense account has been successfully verified.
+          {message || "Your AgroSense account has been successfully verified."}
         </CardDescription>
       </CardHeader>
 
@@ -194,9 +233,7 @@ function SuccessCard() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* ALREADY VERIFIED CARD                                                     */
-/* ────────────────────────────────────────────────────────────────────────── */
+// ── Already Verified Card ──────────────────────────────────────────────
 
 function AlreadyVerifiedCard() {
   return (
@@ -230,9 +267,7 @@ function AlreadyVerifiedCard() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* EXPIRED CARD                                                              */
-/* ────────────────────────────────────────────────────────────────────────── */
+// ── Expired Card ────────────────────────────────────────────────────────
 
 function ExpiredCard({
   message,
@@ -283,7 +318,6 @@ function ExpiredCard({
           Request a new verification email below.
         </p>
 
-        {/* Email input if no email available */}
         {showEmailInput && (
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
@@ -300,7 +334,6 @@ function ExpiredCard({
           </div>
         )}
 
-        {/* Resend button */}
         <Button
           onClick={handleResend}
           disabled={isPending || resent}
@@ -324,7 +357,6 @@ function ExpiredCard({
           )}
         </Button>
 
-        {/* Show email input toggle */}
         {!email && !showEmailInput && (
           <Button
             variant="ghost"
@@ -363,9 +395,7 @@ function ExpiredCard({
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* ERROR CARD                                                                */
-/* ────────────────────────────────────────────────────────────────────────── */
+// ── Error Card ──────────────────────────────────────────────────────────
 
 function ErrorCard({ message }: { message: string }) {
   return (
@@ -378,7 +408,7 @@ function ErrorCard({ message }: { message: string }) {
           Verification failed
         </CardTitle>
         <CardDescription>
-          The verification link is invalid or could not be processed.
+          {message || "The verification link is invalid or could not be processed."}
         </CardDescription>
       </CardHeader>
 

@@ -26,7 +26,6 @@ export class EmailVerificationService {
     private readonly featureFlagsService: FeatureFlagsService,
   ) {}
 
-
   private async isEnabled(): Promise<boolean> {
     return this.featureFlagsService.isEnabled(EMAIL_CONFIRMATION.FEATURE_FLAG);
   }
@@ -99,22 +98,29 @@ export class EmailVerificationService {
   /**
    * Resend verification link
    */
-  public async resendConfirmationLink(
-  email: string,
-): Promise<{
-  success: boolean;
-  message: string;
-}> {
-  if (!(await this.isEnabled())) {
-    return {
-      success: false,
-      message: 'Email verification is currently disabled.',
-    };
-  }
+  public async resendConfirmationLink(email: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    if (!(await this.isEnabled())) {
+      return {
+        success: false,
+        message: 'Email verification is currently disabled.',
+      };
+    }
 
-  const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmail(email);
 
-  if (!user || user.isEmailVerified) {
+    if (!user || user.isEmailVerified) {
+      return {
+        success: true,
+        message:
+          'If an unverified account exists for this email, a verification email has been sent.',
+      };
+    }
+
+    await this.sendVerificationLink(user.email);
+
     return {
       success: true,
       message:
@@ -122,27 +128,16 @@ export class EmailVerificationService {
     };
   }
 
-  await this.sendVerificationLink(user.email);
-
-  return {
-    success: true,
-    message:
-      'If an unverified account exists for this email, a verification email has been sent.',
-  };
-}
-
   /**
    * Confirm email with token
    */
   public async confirmEmail(email: string): Promise<{
-    success: boolean;
     message: string;
   }> {
     this.logger.log(`Confirming email: ${email}`);
 
     if (!(await this.isEnabled())) {
       return {
-        success: false,
         message: 'Email verification is currently disabled.',
       };
     }
@@ -158,10 +153,8 @@ export class EmailVerificationService {
 
     await this.usersService.markEmailAsVerified(email);
 
-    this.logger.log(`Email confirmed successfully: ${email}`);
     return {
-      success: true,
-      message: 'Email confirmed successfully',
+      message: 'Your AgroSense account has been successfully verified.',
     };
   }
 
@@ -172,7 +165,9 @@ export class EmailVerificationService {
     this.logger.debug('Decoding confirmation token');
 
     if (!(await this.isEnabled())) {
-      throw new BadRequestException('Email verification is currently disabled.');
+      throw new BadRequestException(
+        'Email verification is currently disabled.',
+      );
     }
 
     try {

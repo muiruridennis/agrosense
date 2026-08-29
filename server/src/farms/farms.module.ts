@@ -5,7 +5,6 @@ import { FarmsService } from './farms.service';
 import { FarmsController } from './farms.controller';
 import { FarmOwnerGuard } from '../common/guards/farm-owner.guard';
 import { UsersModule } from '../users/users.module';
-import { PlotsModule } from '../plots/plots.module';
 import { FarmMembersModule } from '../farm-members/farm-members.module';
 
 @Module({
@@ -13,7 +12,6 @@ import { FarmMembersModule } from '../farm-members/farm-members.module';
     TypeOrmModule.forFeature([Farm]),
     UsersModule,
     forwardRef(() => FarmMembersModule),
-    forwardRef(() => PlotsModule),
   ],
   providers: [FarmsService, FarmOwnerGuard],
   controllers: [FarmsController],

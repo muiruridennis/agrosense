@@ -12,7 +12,7 @@ import { EmailModule } from '../email/email.module';
 import { SmsModule } from '../sms/sms.module';
 import { InAppModule } from '../inapp/inapp.module';
 import { PushModule } from '../push/push.module';
-import { JobsModule } from '../jobs/jobs.module';
+import { QueueModule } from '../queues/queues.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { JobsModule } from '../jobs/jobs.module';
     forwardRef(() => SmsModule),
     forwardRef(() => InAppModule),
     forwardRef(() => PushModule),
-    forwardRef(() => JobsModule),
+    forwardRef(() => QueueModule),
   ],
 
   controllers: [

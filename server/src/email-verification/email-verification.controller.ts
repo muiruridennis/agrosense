@@ -29,12 +29,12 @@ export class EmailConfirmationController {
     const email = await this.emailVerificationService.decodeConfirmationToken(
       confirmationData.token,
     );
-    await this.emailVerificationService.confirmEmail(email);
+    return await this.emailVerificationService.confirmEmail(email);
   }
 
   @Post('resend-confirmation-link')
   @UseGuards(FeatureFlagGuard(EMAIL_CONFIRMATION.FEATURE_FLAG))
   async resendConfirmationLink(@Body() dto: ResendVerificationEmailDto) {
-    return this.emailVerificationService.resendConfirmationLink(dto.email);
+    return  await this.emailVerificationService.resendConfirmationLink(dto.email);
   }
 }

@@ -1,7 +1,7 @@
 // pricing/entities/record-pricing-snapshot.entity.ts
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
-import { FlockRecord } from '../../poultry/entities/flock-record.entity';
+// import { FlockRecord } from '../../poultry/entities/flock-record.entity';
 import { PricingTier } from './pricing-tier.entity';
 
 @Entity('record_pricing_snapshots')
@@ -11,9 +11,9 @@ export class RecordPricingSnapshot extends BaseEntity {
   @Column({ type: 'uuid' })
   recordId!: string;
 
-  @ManyToOne(() => FlockRecord)
-  @JoinColumn({ name: 'recordId' })
-  record!: FlockRecord;
+  // @ManyToOne(() => FlockRecord)
+  // @JoinColumn({ name: 'recordId' })
+  // record!: FlockRecord;
 
   @Column({ type: 'uuid' })
   pricingTierId!: string;

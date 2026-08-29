@@ -53,7 +53,6 @@ export class AuthController {
     const { user } = req;
     await this.authService.issueTokens(user, res);
     await this.authService.updateLastLogin(user.id, new Date());
-    // TransformInterceptor wraps → { success: true, data: user, timestamp }
     return user;
   }
 

@@ -1,39 +1,35 @@
+// lib/hooks/useEmailVerification.ts
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, ApiError } from "@/lib/api/client";
 import { toast } from "sonner";
 
 interface ConfirmEmailResponse {
-  success: boolean;
   message: string;
 }
 
 interface ResendConfirmationResponse {
-  success: boolean;
   message: string;
 }
 
 export function useConfirmEmail() {
   return useMutation({
     mutationFn: async (token: string): Promise<ConfirmEmailResponse> => {
-      try {
-        const response = await apiClient.post<ConfirmEmailResponse>(
-          "/email-verification/confirm",
-          { token },
-        );
-        return response.data;
-      } catch (error: any) {
-        const message =
-          error?.response?.data?.message || "Failed to confirm email";
-        throw new Error(message);
-      }
+      const response = await apiClient.post<ConfirmEmailResponse>(
+        "/email-verification/confirm",
+        { token },
+      );
+      return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Email confirmed successfully! 🎉");
+      console.log("Email confirmed successfully:", data);
+      toast.success(data?.message || "Email confirmed successfully! 🎉");
     },
-    onError: (error: any) => {
-      const message = error?.message || "Failed to confirm email";
+    onError: (error) => {
+      // ✅ error is now either ApiError or some other error
+      const message =
+        error instanceof ApiError ? error.message : "Failed to confirm email";
       toast.error(message);
     },
   });
@@ -51,9 +47,11 @@ export function useResendConfirmation() {
     onSuccess: (data) => {
       toast.success(data.message || "Confirmation link resent! 📧");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message =
-        error?.response?.data?.message || "Failed to resend confirmation";
+        error instanceof ApiError
+          ? error.message
+          : "Failed to resend confirmation link";
       toast.error(message);
     },
   });
