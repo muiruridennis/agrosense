@@ -3,9 +3,16 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
+import dns from 'node:dns';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+
+// Render's network doesn't route outbound IPv6, but Node 18+ tries IPv6
+// first by default — that caused SMTP (and would cause any outbound
+// connection) to fail with ENETUNREACH when a host resolves to an IPv6
+// address. Preferring IPv4 avoids that.
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
