@@ -1,28 +1,26 @@
 # ---- builder ----
 FROM node:22-alpine AS builder
 WORKDIR /app
+
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 RUN npm ci
+
 COPY . .
 RUN npm run build
 
 # ---- runtime ----
-# NOTE: keeping the full builder output here (source + devDependencies)
-# rather than a slim install, because `typeorm:run-migrations` runs via
-# ts-node-commonjs against the raw .ts source and ./typeOrm.config.ts.
-# This makes the image bigger than a typical prod image; once migrations
-# are confirmed working, this can be revisited (e.g. a compiled JS
-# datasource config that only needs `dist/`, letting this stage go back
-# to a slim `npm ci --omit=dev` + dist/ copy).
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app ./
-COPY start.sh ./start.sh
-RUN chmod +x start.sh && \
-    addgroup -S app && adduser -S app -G app
+
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+RUN addgroup -S app && adduser -S app -G app
 USER app
-EXPOSE 3001
+
+EXPOSE 10000
 CMD ["node", "dist/main.js"]
