@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
@@ -13,17 +14,20 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/auth.dto';
+import { RegisterDto } from './dtos/auth.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { LocalAuthenticationGuard } from './guards/local-authentication.guard';
 import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
 import type { RequestWithUser } from './interfaces/request-with-user.interface';
 import { AuthGuard } from '@nestjs/passport';
+import { EmailVerificationService } from '../email-verification/email-verification.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailVerificationService: EmailVerificationService,
+  ) {}
 
   // POST /auth/register
   @Post('register')
@@ -33,15 +37,14 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.authService.register(dto);
-    await this.authService.issueTokens(user as any, res);
-    // TransformInterceptor wraps this as { success: true, data: user, timestamp }
+    await this.emailVerificationService.sendVerificationLink(dto.email);
     return user;
   }
 
   // POST /auth/login
   @Post('login')
   @HttpCode(HttpStatus.OK)
-   @UseGuards(AuthGuard('custom-local')) 
+  @UseGuards(AuthGuard('custom-local'))
   // @UseGuards(LocalAuthenticationGuard)
   async login(
     @Req() req: RequestWithUser,
@@ -50,7 +53,6 @@ export class AuthController {
     const { user } = req;
     await this.authService.issueTokens(user, res);
     await this.authService.updateLastLogin(user.id, new Date());
-    // TransformInterceptor wraps → { success: true, data: user, timestamp }
     return user;
   }
 
@@ -71,8 +73,7 @@ export class AuthController {
   @Get('currentuser')
   @UseGuards(JwtAuthenticationGuard)
   getCurrentUser(@Req() req: RequestWithUser) {
-    const { currentHashedRefreshToken: _rt, password: _pw, ...safe } =
-      req.user;
+    const { currentHashedRefreshToken: _rt, password: _pw, ...safe } = req.user;
     // Return plain object — TransformInterceptor wraps it
     // Result: { success: true, data: { id, email, ... }, timestamp }
     return safe;
@@ -86,8 +87,7 @@ export class AuthController {
     @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { currentHashedRefreshToken: _rt, password: _pw, ...safe } =
-      req.user;
+    const { currentHashedRefreshToken: _rt, password: _pw, ...safe } = req.user;
     await this.authService.issueTokens(req.user, res);
     // Return plain object — TransformInterceptor wraps it
     // Result: { success: true, data: { id, email, ... }, timestamp }

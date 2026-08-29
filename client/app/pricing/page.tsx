@@ -6,14 +6,14 @@ import Link from 'next/link';
 import { 
   CheckCircle2, 
   ArrowRight, 
-  Leaf, 
+  Bird, 
   X, 
-  HelpCircle,
-  Infinity,
   Users,
   Phone,
   Mail,
-  MessageCircle
+  MessageCircle,
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,31 +24,32 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const plans = [
     {
-      name: "Basic",
+      name: "Starter",
       price: {
         monthly: 0,
         yearly: 0
       },
       period: "",
-      description: "For small-scale farmers starting out",
+      description: "For small-scale poultry farmers starting out",
       features: [
-        { name: "Up to 2 farms", included: true },
-        { name: "Basic crop tracking", included: true },
-        { name: "Weather alerts", included: true },
+        { name: "Up to 2 flocks", included: true },
+        { name: "Basic flock tracking", included: true },
+        { name: "Egg production logging", included: true },
         { name: "Email support", included: true },
         { name: "Basic reports", included: true },
-        { name: "AI disease detection", included: false },
-        { name: "Livestock health tracking", included: false },
-        { name: "Profit & loss reports", included: false },
+        { name: "Health & vaccination records", included: false },
+        { name: "Feed cost tracking", included: false },
+        { name: "Market price insights", included: false },
         { name: "24/7 WhatsApp support", included: false },
         { name: "Export data", included: false },
-        { name: "Market prices", included: false },
+        { name: "Mortality tracking", included: false },
         { name: "API access", included: false }
       ],
       cta: "Get Started",
@@ -59,22 +60,21 @@ export default function PricingPage() {
       name: "Pro",
       price: {
         monthly: 499,
-        yearly: 4990  // 2 months free (4990 vs 5988)
+        yearly: 4990
       },
       period: "/month",
-      description: "Most popular. For serious farmers.",
+      description: "Most popular. For serious poultry farmers.",
       features: [
-        { name: "Unlimited farms", included: true },
-        { name: "Basic crop tracking", included: true },
-        { name: "Weather alerts", included: true },
-        { name: "Email support", included: true },
-        { name: "Basic reports", included: true },
-        { name: "AI disease detection", included: true },
-        { name: "Livestock health tracking", included: true },
-        { name: "Profit & loss reports", included: true },
+        { name: "Unlimited flocks", included: true },
+        { name: "Flock management", included: true },
+        { name: "Egg production tracking", included: true },
+        { name: "Health & vaccination records", included: true },
+        { name: "Feed cost tracking", included: true },
+        { name: "Mortality tracking", included: true },
+        { name: "Market price insights", included: true },
         { name: "24/7 WhatsApp support", included: true },
         { name: "Export data", included: true },
-        { name: "Market prices", included: true },
+        { name: "Advanced analytics", included: true },
         { name: "API access", included: false }
       ],
       cta: "Start 14-Day Trial",
@@ -82,26 +82,27 @@ export default function PricingPage() {
       buttonVariant: "default" as const
     },
     {
-      name: "Cooperative",
+      name: "Enterprise",
       price: {
         monthly: "Custom",
         yearly: "Custom"
       },
       period: "",
-      description: "For groups and agribusiness",
+      description: "For large poultry operations and cooperatives",
       features: [
-        { name: "Unlimited farms", included: true },
-        { name: "Basic crop tracking", included: true },
-        { name: "Weather alerts", included: true },
-        { name: "Email support", included: true },
-        { name: "Basic reports", included: true },
-        { name: "AI disease detection", included: true },
-        { name: "Livestock health tracking", included: true },
-        { name: "Profit & loss reports", included: true },
+        { name: "Unlimited flocks", included: true },
+        { name: "Flock management", included: true },
+        { name: "Egg production tracking", included: true },
+        { name: "Health & vaccination records", included: true },
+        { name: "Feed cost tracking", included: true },
+        { name: "Mortality tracking", included: true },
+        { name: "Market price insights", included: true },
         { name: "24/7 WhatsApp support", included: true },
         { name: "Export data", included: true },
-        { name: "Market prices", included: true },
-        { name: "API access", included: true }
+        { name: "Advanced analytics", included: true },
+        { name: "API access", included: true },
+        { name: "Dedicated account manager", included: true },
+        { name: "Team training & onboarding", included: true }
       ],
       cta: "Contact Sales",
       popular: false,
@@ -109,25 +110,35 @@ export default function PricingPage() {
     }
   ];
 
-  // Calculate yearly savings
-  const yearlySavings = (plans[1].price.monthly * 12) - plans[1].price.yearly;
+  const yearlySavings = plans[1].price.monthly ? (plans[1].price.monthly * 12) - (plans[1].price.yearly as number) : 0;
 
   return (
-    <div className="min-h-screen py-12 md:py-20 bg-muted/30">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 md:py-20 bg-background">
+      <div className="container-custom">
         
-        {/* Header */}
+        {/* ========================================
+            HEADER
+        ======================================== */}
+        
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <Badge variant="secondary" className="mb-4">Pricing</Badge>
+          <Badge 
+            variant="secondary" 
+            className="mb-4 border-primary/15 bg-primary/5 text-primary"
+          >
+            Pricing
+          </Badge>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-muted-foreground">
-            Choose the plan that fits your farm. Start free, upgrade when you need more.
+            Choose the plan that fits your poultry operation. Start free, upgrade when you need more.
           </p>
         </div>
 
-        {/* Billing Toggle */}
+        {/* ========================================
+            BILLING TOGGLE
+        ======================================== */}
+        
         <div className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-3 bg-muted p-1 rounded-lg">
             <button
@@ -149,12 +160,15 @@ export default function PricingPage() {
               }`}
             >
               Yearly
-              <span className="ml-1 text-xs text-success">Save 17%</span>
+              <span className="ml-1 text-xs text-emerald-400">Save 17%</span>
             </button>
           </div>
         </div>
 
-        {/* Pricing Cards */}
+        {/* ========================================
+            PRICING CARDS
+        ======================================== */}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
           {plans.map((plan, index) => (
             <div 
@@ -165,12 +179,12 @@ export default function PricingPage() {
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                  <Badge className="bg-primary text-primary-foreground">
+                  <Badge className="bg-amber-400 text-[#070B14] border-none">
                     Most Popular
                   </Badge>
                 </div>
               )}
-              <Card className={`h-full ${plan.popular ? 'border-primary shadow-xl' : 'border-border'}`}>
+              <Card className={`h-full ${plan.popular ? 'border-amber-400/30 shadow-xl shadow-amber-400/5' : 'border-border/50'}`}>
                 <CardHeader>
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
@@ -186,7 +200,7 @@ export default function PricingPage() {
                     )}
                   </div>
                   {billingCycle === 'yearly' && plan.name === 'Pro' && (
-                    <p className="text-xs text-success mt-1">
+                    <p className="text-xs text-emerald-400 mt-1">
                       Save KES {yearlySavings.toLocaleString()} annually
                     </p>
                   )}
@@ -196,7 +210,7 @@ export default function PricingPage() {
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
                         {feature.included ? (
-                          <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                         ) : (
                           <X className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         )}
@@ -210,10 +224,13 @@ export default function PricingPage() {
                 <CardFooter>
                   <Button 
                     variant={plan.buttonVariant} 
-                    className="w-full gap-2"
+                    className={cn(
+                      "w-full gap-2",
+                      plan.popular && "bg-amber-400 text-[#070B14] hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/25"
+                    )}
                     asChild
                   >
-                    <Link href={plan.name === 'Cooperative' ? '/contact' : '/auth/signup'}>
+                    <Link href={plan.name === 'Enterprise' ? '/contact' : '/register'}>
                       {plan.cta}
                       {plan.cta !== 'Contact Sales' && <ArrowRight className="w-4 h-4" />}
                     </Link>
@@ -224,15 +241,21 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Free Trial Notice */}
+        {/* ========================================
+            FREE TRIAL NOTICE
+        ======================================== */}
+        
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-card px-4 py-2 rounded-full">
-            <Leaf className="w-4 h-4 text-primary" />
+          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-card border border-border/50 px-4 py-2 rounded-full">
+            <Sparkles className="w-4 h-4 text-amber-400" />
             <span>All plans include a 14-day free trial. No credit card required.</span>
           </div>
         </div>
 
-        {/* Feature Comparison Table (Detailed) */}
+        {/* ========================================
+            FEATURE COMPARISON TABLE
+        ======================================== */}
+        
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Compare all features</h2>
           <div className="overflow-x-auto">
@@ -240,44 +263,47 @@ export default function PricingPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-4 px-4 font-semibold">Feature</th>
-                  <th className="text-center py-4 px-4 font-semibold">Basic</th>
-                  <th className="text-center py-4 px-4 font-semibold bg-primary/5">Pro</th>
-                  <th className="text-center py-4 px-4 font-semibold">Cooperative</th>
+                  <th className="text-center py-4 px-4 font-semibold">Starter</th>
+                  <th className="text-center py-4 px-4 font-semibold bg-amber-400/5">Pro</th>
+                  <th className="text-center py-4 px-4 font-semibold">Enterprise</th>
                 </tr>
               </thead>
               <tbody>
-                <TableRow feature="Farms" basic="Up to 2" pro="Unlimited" coop="Unlimited" />
-                <TableRow feature="Crop tracking" basic="✓" pro="✓" coop="✓" />
-                <TableRow feature="Weather alerts" basic="✓" pro="✓" coop="✓" />
-                <TableRow feature="Email support" basic="✓" pro="✓" coop="✓" />
-                <TableRow feature="AI disease detection" basic="✗" pro="✓" coop="✓" highlight />
-                <TableRow feature="Livestock health" basic="✗" pro="✓" coop="✓" highlight />
-                <TableRow feature="Profit & loss reports" basic="✗" pro="✓" coop="✓" highlight />
-                <TableRow feature="24/7 WhatsApp support" basic="✗" pro="✓" coop="✓" highlight />
-                <TableRow feature="Export data" basic="✗" pro="✓" coop="✓" />
-                <TableRow feature="Market prices" basic="✗" pro="✓" coop="✓" />
-                <TableRow feature="API access" basic="✗" pro="✗" coop="✓" highlight />
-                <TableRow feature="Dedicated account manager" basic="✗" pro="✗" coop="✓" />
-                <TableRow feature="Training & onboarding" basic="✗" pro="✗" coop="✓" />
+                <TableRow feature="Flock Management" basic="Up to 2" pro="Unlimited" coop="Unlimited" />
+                <TableRow feature="Egg Production Tracking" basic="✓" pro="✓" coop="✓" />
+                <TableRow feature="Health & Vaccination" basic="✗" pro="✓" coop="✓" highlight />
+                <TableRow feature="Feed Cost Tracking" basic="✗" pro="✓" coop="✓" highlight />
+                <TableRow feature="Mortality Tracking" basic="✗" pro="✓" coop="✓" highlight />
+                <TableRow feature="Market Price Insights" basic="✗" pro="✓" coop="✓" highlight />
+                <TableRow feature="Email Support" basic="✓" pro="✓" coop="✓" />
+                <TableRow feature="24/7 WhatsApp Support" basic="✗" pro="✓" coop="✓" />
+                <TableRow feature="Export Data" basic="✗" pro="✓" coop="✓" />
+                <TableRow feature="Advanced Analytics" basic="✗" pro="✓" coop="✓" />
+                <TableRow feature="API Access" basic="✗" pro="✗" coop="✓" highlight />
+                <TableRow feature="Dedicated Account Manager" basic="✗" pro="✗" coop="✓" />
+                <TableRow feature="Training & Onboarding" basic="✗" pro="✗" coop="✓" />
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* FAQ Section */}
+        {/* ========================================
+            FAQ SECTION
+        ======================================== */}
+        
         <div className="max-w-3xl mx-auto mb-16">
           <h2 className="text-2xl font-bold text-center mb-8">Frequently asked questions</h2>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Can I switch plans later?</AccordionTrigger>
               <AccordionContent>
-                Yes, you can upgrade or downgrade at any time. If you upgrade, the new price will be prorated for the remaining period. If you downgrade, the new price will apply at the next billing cycle.
+                Yes, you can upgrade or downgrade at any time. If you upgrade, the new price will be prorated for the remaining period.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
               <AccordionTrigger>What payment methods do you accept?</AccordionTrigger>
               <AccordionContent>
-                We accept M-Pesa, Visa, Mastercard, and bank transfers. For cooperatives, we also offer invoice-based payments.
+                We accept M-Pesa, Visa, Mastercard, and bank transfers. For enterprise plans, we also offer invoice-based payments.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
@@ -287,9 +313,9 @@ export default function PricingPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
-              <AccordionTrigger>Do you offer discounts for non-profits?</AccordionTrigger>
+              <AccordionTrigger>Do you offer discounts for cooperatives?</AccordionTrigger>
               <AccordionContent>
-                Yes, we offer a 25% discount for registered agricultural non-profits and farmer training organizations. Contact our sales team for details.
+                Yes, we offer volume discounts for registered poultry cooperatives and farmer training organizations. Contact our sales team for details.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-5">
@@ -301,24 +327,27 @@ export default function PricingPage() {
             <AccordionItem value="item-6">
               <AccordionTrigger>What support do you offer?</AccordionTrigger>
               <AccordionContent>
-                Basic plan includes email support. Pro and Cooperative plans include 24/7 WhatsApp support in English and Swahili. Cooperative plans also include a dedicated account manager.
+                Starter plan includes email support. Pro and Enterprise plans include 24/7 WhatsApp support in English and Swahili. Enterprise plans also include a dedicated account manager.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </div>
 
-        {/* Enterprise CTA */}
-        <div className="text-center bg-card border border-border rounded-2xl p-8 md:p-12">
+        {/* ========================================
+            ENTERPRISE CTA
+        ======================================== */}
+        
+        <div className="text-center bg-card border border-border/50 rounded-2xl p-8 md:p-12">
           <div className="max-w-2xl mx-auto">
-            <Users className="w-12 h-12 text-primary mx-auto mb-4" />
+            <Users className="w-12 h-12 text-amber-400 mx-auto mb-4" />
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Need a custom plan for your cooperative?
+              Need a custom plan for your poultry cooperative?
             </h2>
             <p className="text-muted-foreground mb-6">
-              Get volume discounts, custom integrations, and priority support for large organizations.
+              Get volume discounts, custom integrations, and priority support for large poultry operations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="gap-2">
+              <Button asChild size="lg" className="gap-2 bg-primary hover:bg-primary/90">
                 <Link href="/contact">
                   Contact Sales
                   <ArrowRight className="w-4 h-4" />
@@ -366,10 +395,10 @@ function TableRow({
   highlight?: boolean;
 }) {
   return (
-    <tr className={`border-b border-border ${highlight ? 'bg-primary/5' : ''}`}>
+    <tr className={`border-b border-border ${highlight ? 'bg-amber-400/5' : ''}`}>
       <td className="py-3 px-4 text-sm font-medium">{feature}</td>
       <td className="py-3 px-4 text-sm text-center">{basic}</td>
-      <td className={`py-3 px-4 text-sm text-center ${highlight ? 'font-semibold text-primary' : ''}`}>
+      <td className={`py-3 px-4 text-sm text-center ${highlight ? 'font-semibold text-amber-400' : ''}`}>
         {pro}
       </td>
       <td className="py-3 px-4 text-sm text-center">{coop}</td>

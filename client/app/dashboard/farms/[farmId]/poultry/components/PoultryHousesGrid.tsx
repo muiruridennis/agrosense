@@ -38,9 +38,12 @@ export function PoultryHousesGrid({ farmId }: PoultryHousesGridProps) {
     );
   }
 
-  const activeHouses = houses?.filter(h => h.isActive) || [];
+  const activeHouses = houses?.filter((h) => h.isActive) || [];
   const totalCapacity = activeHouses.reduce((sum, h) => sum + h.capacity, 0);
-  const totalFlocks = activeHouses.reduce((sum, h) => sum + (h.flocks?.length || 0), 0);
+  const totalFlocks = activeHouses.reduce(
+    (sum, h) => sum + (h.flocks?.length || 0),
+    0,
+  );
 
   const handleHouseUpdated = () => {
     refetch();
@@ -57,9 +60,13 @@ export function PoultryHousesGrid({ farmId }: PoultryHousesGridProps) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Poultry Houses</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            Poultry Houses
+          </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {activeHouses.length} active houses · {totalCapacity.toLocaleString()} bird capacity · {totalFlocks} active flocks
+            {activeHouses.length} active houses ·{" "}
+            {totalCapacity.toLocaleString()} bird capacity · {totalFlocks}{" "}
+            active flocks
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
@@ -70,10 +77,29 @@ export function PoultryHousesGrid({ farmId }: PoultryHousesGridProps) {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard title="Total Houses" value={houses?.length || 0} icon={Building2} />
-        <StatCard title="Active Houses" value={activeHouses.length} icon={Building2} variant="success" />
-        <StatCard title="Total Capacity" value={`${totalCapacity.toLocaleString()}`} subtitle="birds" icon={Building2} />
-        <StatCard title="Active Flocks" value={totalFlocks} icon={Building2} variant="info" />
+        <StatCard
+          title="Total Houses"
+          value={houses?.length || 0}
+          icon={Building2}
+        />
+        <StatCard
+          title="Active Houses"
+          value={activeHouses.length}
+          icon={Building2}
+          variant="success"
+        />
+        <StatCard
+          title="Total Capacity"
+          value={`${totalCapacity.toLocaleString()}`}
+          subtitle="birds"
+          icon={Building2}
+        />
+        <StatCard
+          title="Active Flocks"
+          value={totalFlocks}
+          icon={Building2}
+          variant="info"
+        />
       </div>
 
       {/* Houses Grid */}
@@ -82,9 +108,9 @@ export function PoultryHousesGrid({ farmId }: PoultryHousesGridProps) {
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {houses?.map((house) => (
-            <PoultryHouseCard 
-              key={house.id} 
-              house={house} 
+            <PoultryHouseCard
+              key={house.id}
+              house={house}
               farmId={farmId}
               onEdit={() => setEditingHouse(house)}
               onDelete={() => setDeletingHouse(house)}
@@ -121,7 +147,13 @@ export function PoultryHousesGrid({ farmId }: PoultryHousesGridProps) {
   );
 }
 
-function StatCard({ title, value, subtitle, icon: Icon, variant = "default" }: any) {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  variant = "default",
+}: any) {
   const variants = {
     default: "bg-muted/30",
     success: "bg-emerald-50 dark:bg-emerald-950/30",
@@ -133,7 +165,9 @@ function StatCard({ title, value, subtitle, icon: Icon, variant = "default" }: a
       <Icon className="mx-auto h-4 w-4 text-muted-foreground mb-1" />
       <p className="text-2xl font-bold">{value}</p>
       <p className="text-xs text-muted-foreground">{title}</p>
-      {subtitle && <p className="text-[10px] text-muted-foreground/60">{subtitle}</p>}
+      {subtitle && (
+        <p className="text-[10px] text-muted-foreground/60">{subtitle}</p>
+      )}
     </div>
   );
 }

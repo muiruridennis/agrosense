@@ -12,12 +12,14 @@ import { CustomLocalStrategy } from './strategies/custom-local.strategy';
 import { FarmRoleGuard } from './guards/roles.guard';
 import { FarmAccessGuard } from './guards/farm-access.guard';
 import { FarmMembersModule } from '../farm-members/farm-members.module';
+import { EmailVerificationModule } from '../email-verification/email-verification.module';
 
 @Module({
   imports: [
     UsersModule,
     FarmMembersModule,
     PassportModule,
+    EmailVerificationModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

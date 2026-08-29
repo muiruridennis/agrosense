@@ -1,12 +1,7 @@
 // app/dashboard/farms/[farmId]/poultry/components/FlockRecordsTable.tsx
 "use client";
 
-import {
-  MoreVertical,
-  Pencil,
-  Trash2,
-  Eye,
-} from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Eye } from "lucide-react";
 
 import {
   Table,
@@ -49,16 +44,21 @@ export function FlockRecordsTable({
 
   // Status badge colors
   const statusStyles: Record<string, string> = {
-    draft: "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
-    submitted: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
-    reviewed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400",
+    draft:
+      "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400",
+    submitted:
+      "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
+    reviewed:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400",
     flagged: "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400",
   };
 
   // Health risk color
   const getHealthRiskColor = (score: number) => {
-    if (score >= 60) return "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400";
-    if (score >= 30) return "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400";
+    if (score >= 60)
+      return "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400";
+    if (score >= 30)
+      return "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400";
     return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400";
   };
 
@@ -147,7 +147,7 @@ export function FlockRecordsTable({
               key={record.id}
               className={cn(
                 "cursor-pointer transition-colors hover:bg-muted/30",
-                index % 2 === 0 && "bg-muted/5"
+                index % 2 === 0 && "bg-muted/5",
               )}
               onClick={() => handleRowClick(record)}
             >
@@ -159,7 +159,7 @@ export function FlockRecordsTable({
                 <Badge
                   className={cn(
                     "text-[10px] font-semibold uppercase tracking-wider",
-                    statusStyles[record.status] || statusStyles.draft
+                    statusStyles[record.status] || statusStyles.draft,
                   )}
                 >
                   {record.status || "draft"}
@@ -227,7 +227,7 @@ export function FlockRecordsTable({
                 <Badge
                   className={cn(
                     "text-[10px] font-mono",
-                    getHealthRiskColor(record.healthRiskScore || 0)
+                    getHealthRiskColor(record.healthRiskScore || 0),
                   )}
                 >
                   {record.healthRiskScore?.toFixed(1) || "—"}
@@ -253,14 +253,20 @@ export function FlockRecordsTable({
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={(e) => handleAction(e as any, () => onView(record))}>
+                    <DropdownMenuItem
+                      onClick={(e) =>
+                        handleAction(e as any, () => onView(record))
+                      }
+                    >
                       <Eye className="mr-2 h-3.5 w-3.5" />
                       View Details
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
                       disabled={record.status !== "draft"}
-                      onClick={(e) => handleAction(e as any, () => onEdit(record))}
+                      onClick={(e) =>
+                        handleAction(e as any, () => onEdit(record))
+                      }
                     >
                       <Pencil className="mr-2 h-3.5 w-3.5" />
                       Edit Record
@@ -270,7 +276,9 @@ export function FlockRecordsTable({
 
                     <DropdownMenuItem
                       disabled={record.status !== "draft"}
-                      onClick={(e) => handleAction(e as any, () => onDelete(record))}
+                      onClick={(e) =>
+                        handleAction(e as any, () => onDelete(record))
+                      }
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="mr-2 h-3.5 w-3.5" />

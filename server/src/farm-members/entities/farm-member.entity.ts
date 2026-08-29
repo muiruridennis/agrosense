@@ -32,11 +32,12 @@ export class FarmMember extends BaseEntity {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user!: User;
-
   @Column({ type: 'uuid' })
   farmId!: string;
 
-  @ManyToOne(() => Farm, (farm) => farm.members, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Farm, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'farmId' })
   farm!: Farm;
 

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -10,7 +11,7 @@ import { Response } from 'express';
 import { v4 as uuid } from 'uuid';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
-import { RegisterDto } from './dto/auth.dto';
+import { RegisterDto } from './dtos/auth.dto';
 import {
   TokenPayload,
   RefreshTokenPayload,
@@ -26,15 +27,15 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly config: ConfigService,
+    private readonly configService: ConfigService,
   ) {
-    this.isProd = config.get<string>('NODE_ENV') === 'production';
+    this.isProd = this.configService.get<string>('NODE_ENV') === 'production';
   }
 
-   async validateUser(identifier: string, password: string): Promise<any> {
+  async validateUser(identifier: string, password: string): Promise<any> {
     // Check if identifier is email (contains @) or phone number
     const isEmail = identifier.includes('@');
-    
+
     let user;
     if (isEmail) {
       user = await this.usersService.findByEmail(identifier);
@@ -43,17 +44,17 @@ export class AuthService {
       const cleanPhone = identifier.replace(/\s/g, '');
       user = await this.usersService.findByPhoneNumber(cleanPhone);
     }
-    
+
     if (!user) {
       return null;
     }
-    
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPasswordValid) {
       return null;
     }
-    
+
     // Remove sensitive data
     const { password: _pw, currentHashedRefreshToken: _rt, ...result } = user;
     return result;
@@ -92,8 +93,8 @@ export class AuthService {
       role: user.role,
     };
 
-    const secret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
-    const expiresIn = this.config.get<string>('JWT_ACCESS_EXPIRY', '15m');
+    const secret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRY', '15m');
 
     const token = this.jwtService.sign(payload, {
       secret,
@@ -121,8 +122,8 @@ export class AuthService {
       tokenFamily: uuid(),
     };
 
-    const secret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    const expiresIn = this.config.get<string>('JWT_REFRESH_EXPIRY', '30d');
+    const secret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const expiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRY', '30d');
 
     const token = this.jwtService.sign(payload, {
       secret,
@@ -137,7 +138,7 @@ export class AuthService {
         httpOnly: true,
         secure: this.isProd,
         sameSite: 'lax',
-        path: '/', 
+        path: '/',
         maxAge: this.toMs(expiresIn),
       },
     };
@@ -199,8 +200,8 @@ export class AuthService {
     await this.usersService.updateLastLogin(userId, timestamp);
   }
 
-  // ── Utility ───────────────────────────────────────────────────────────────
-
+  // ── Helper functions ───────────────────────────────────────────────────────
+  
   private toMs(duration: string): number {
     const unit = duration.slice(-1);
     const value = parseInt(duration.slice(0, -1), 10);
@@ -212,6 +213,4 @@ export class AuthService {
     };
     return (map[unit] ?? 60_000) * value;
   }
-
-  
 }

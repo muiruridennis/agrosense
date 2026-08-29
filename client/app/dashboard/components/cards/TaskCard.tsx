@@ -25,11 +25,17 @@ interface TaskCardProps {
 
 const priorityColors = {
   high: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
+  medium:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
   low: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
 };
 
-export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardProps) {
+export function TaskCard({
+  task,
+  onToggle,
+  onClick,
+  compact = false,
+}: TaskCardProps) {
   const isCompleted = task.status === "completed";
 
   if (compact) {
@@ -37,7 +43,7 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
       <div
         className={cn(
           "flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50",
-          isCompleted && "opacity-60"
+          isCompleted && "opacity-60",
         )}
       >
         <div className="flex items-center gap-3">
@@ -53,7 +59,11 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
             </p>
             {task.dueTime && (
               <p className="text-xs text-muted-foreground">
-                Due {new Date(task.dueTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                Due{" "}
+                {new Date(task.dueTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             )}
           </div>
@@ -65,7 +75,10 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
 
   return (
     <Card
-      className={cn("cursor-pointer transition-all hover:shadow-md", isCompleted && "opacity-60")}
+      className={cn(
+        "cursor-pointer transition-all hover:shadow-md",
+        isCompleted && "opacity-60",
+      )}
       onClick={onClick}
     >
       <CardContent className="p-4">
@@ -80,7 +93,9 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
           )}
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h4 className={cn("font-semibold", isCompleted && "line-through")}>
+              <h4
+                className={cn("font-semibold", isCompleted && "line-through")}
+              >
                 {task.title}
               </h4>
               <Badge className={priorityColors[task.priority]}>
@@ -88,7 +103,9 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
               </Badge>
             </div>
             {task.description && (
-              <p className="text-sm text-muted-foreground">{task.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {task.description}
+              </p>
             )}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {task.location && (
@@ -99,14 +116,17 @@ export function TaskCard({ task, onToggle, onClick, compact = false }: TaskCardP
               )}
               {task.estimatedMinutes && (
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  ~{task.estimatedMinutes} min
+                  <Clock className="h-3 w-3" />~{task.estimatedMinutes} min
                 </span>
               )}
               {task.dueTime && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  Due {new Date(task.dueTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  Due{" "}
+                  {new Date(task.dueTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               )}
             </div>

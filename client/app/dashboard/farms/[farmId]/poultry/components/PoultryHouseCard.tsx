@@ -2,7 +2,15 @@
 "use client";
 
 import { useState } from "react";
-import { Home, ChevronRight, Plus, Users, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import {
+  Home,
+  ChevronRight,
+  Plus,
+  Users,
+  AlertCircle,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,20 +28,28 @@ interface PoultryHouseCardProps {
   onDelete?: () => void;
 }
 
-export function PoultryHouseCard({ house, farmId, onEdit, onDelete }: PoultryHouseCardProps) {
+export function PoultryHouseCard({
+  house,
+  farmId,
+  onEdit,
+  onDelete,
+}: PoultryHouseCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [createFlockOpen, setCreateFlockOpen] = useState(false);
   const [editingFlock, setEditingFlock] = useState<Flock | null>(null);
   const [deletingFlock, setDeletingFlock] = useState<Flock | null>(null);
 
-  const activeFlocks = house.flocks?.filter(f => f.status === "active") || [];
-  const occupancyRate = (activeFlocks.reduce((sum, f) => sum + f.currentCount, 0) / house.capacity) * 100;
+  const activeFlocks = house.flocks?.filter((f) => f.status === "active") || [];
+  const occupancyRate =
+    (activeFlocks.reduce((sum, f) => sum + f.currentCount, 0) /
+      house.capacity) *
+    100;
 
   return (
     <Card
       className={cn(
         "group overflow-hidden transition-all duration-300 hover:shadow-lg",
-        !house.isActive && "opacity-60"
+        !house.isActive && "opacity-60",
       )}
     >
       {/* Header gradient */}
@@ -46,16 +62,20 @@ export function PoultryHouseCard({ house, farmId, onEdit, onDelete }: PoultryHou
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-foreground">{house.name}</h3>
-                <Badge variant={house.isActive ? "default" : "secondary"} className="text-[10px]">
+                <Badge
+                  variant={house.isActive ? "default" : "secondary"}
+                  className="text-[10px]"
+                >
                   {house.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                {house.houseType?.replace("_", " ")} · {house.capacity.toLocaleString()} birds capacity
+                {house.houseType?.replace("_", " ")} ·{" "}
+                {house.capacity.toLocaleString()} birds capacity
               </p>
             </div>
           </div>
-          
+
           {/* House Action Buttons */}
           <div className="flex items-center gap-1">
             {onEdit && (
@@ -90,7 +110,12 @@ export function PoultryHouseCard({ house, farmId, onEdit, onDelete }: PoultryHou
               onClick={() => setExpanded(!expanded)}
               className="shrink-0"
             >
-              <ChevronRight className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} />
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  expanded && "rotate-90",
+                )}
+              />
             </Button>
           </div>
         </div>
@@ -127,9 +152,9 @@ export function PoultryHouseCard({ house, farmId, onEdit, onDelete }: PoultryHou
             {expanded ? (
               <div className="space-y-2">
                 {house.flocks?.map((flock) => (
-                  <FlockCard 
-                    key={flock.id} 
-                    flock={flock} 
+                  <FlockCard
+                    key={flock.id}
+                    flock={flock}
                     farmId={farmId}
                     houseName={house.name}
                     onEdit={() => setEditingFlock(flock)}
@@ -140,7 +165,10 @@ export function PoultryHouseCard({ house, farmId, onEdit, onDelete }: PoultryHou
             ) : (
               <div className="space-y-1.5">
                 {activeFlocks.slice(0, 2).map((flock) => (
-                  <div key={flock.id} className="flex items-center justify-between rounded-lg bg-muted/30 p-2">
+                  <div
+                    key={flock.id}
+                    className="flex items-center justify-between rounded-lg bg-muted/30 p-2"
+                  >
                     <div>
                       <p className="text-sm font-medium">{flock.breed}</p>
                       <p className="text-[10px] text-muted-foreground capitalize">

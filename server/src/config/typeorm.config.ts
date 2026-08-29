@@ -23,7 +23,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
             extra: {
                 charset: 'utf8mb4_unicode_ci',
             },
-            synchronize: true,// Be cautious about using synchronize in production
+            synchronize: false,// Be cautious about using synchronize in production
             autoLoadEntities: true, 
             logging: true,
         };

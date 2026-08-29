@@ -339,6 +339,7 @@ export function usePendingReviewRecords(farmId: string, flockId: string, page = 
         `/farms/${farmId}/poultry/flocks/${flockId}/records/pending-review`,
         { page, limit }
       );
+      console.log("Pending review records fetched:", envelope.data); // Debugging line
       return envelope.data;
     },
     enabled: !!farmId && !!flockId,
@@ -412,11 +413,11 @@ export function useUpdateFlockRecord(farmId: string, recordId: string) {
   });
 }
 
-export function useDeleteFlockRecord(farmId: string, recordId: string) {
+export function useDeleteFlockRecord(farmId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (recordId: string) => {
       await apiClient.delete(`/farms/${farmId}/poultry/records/${recordId}`);
     },
     onSuccess: () => {
@@ -429,6 +430,7 @@ export function useDeleteFlockRecord(farmId: string, recordId: string) {
   });
 }
 
+// In usePoultry.ts
 export function useSubmitRecord(farmId: string) {
   const queryClient = useQueryClient();
 

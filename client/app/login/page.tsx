@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Leaf, Phone, Mail } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Leaf, Phone, Mail, Lock, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,13 +103,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted/30 via-background to-muted/20 px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Leaf className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-bold">
+          <Link href="/" className="inline-flex items-center gap-2 group">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all duration-500" />
+              <Leaf className="relative w-9 h-9 text-primary group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight">
               Agro<span className="text-primary">Sense</span>
             </span>
           </Link>
@@ -118,18 +121,23 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center text-2xl">Sign in</CardTitle>
-            <CardDescription className="text-center">
-              Use phone or email
+        <Card className="relative overflow-hidden shadow-2xl border-muted/50">
+          {/* Decorative top bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
+
+          <CardHeader className="text-center pt-8 pb-4">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Sign in
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Use your phone or email to sign in
             </CardDescription>
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Toggle */}
-              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+              <div className="flex gap-1 p-1 bg-muted/50 rounded-xl">
                 {['phone', 'email'].map(type => (
                   <button
                     key={type}
@@ -137,41 +145,77 @@ export default function LoginPage() {
                     onClick={() => {
                       setIdentifierType(type as any);
                       setFormData(prev => ({ ...prev, identifier: '' }));
+                      setErrors(prev => ({ ...prev, identifier: undefined }));
                     }}
-                    className={`flex-1 py-2 rounded-md ${
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                       identifierType === type
-                        ? 'bg-card text-primary shadow'
-                        : 'text-muted-foreground'
+                        ? 'bg-background text-primary shadow-sm shadow-primary/10'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {type === 'phone' ? 'Phone' : 'Email'}
+                    <span className="flex items-center justify-center gap-2">
+                      {type === 'phone' ? (
+                        <Phone className="h-4 w-4" />
+                      ) : (
+                        <Mail className="h-4 w-4" />
+                      )}
+                      {type === 'phone' ? 'Phone' : 'Email'}
+                    </span>
                   </button>
                 ))}
               </div>
 
               {/* Identifier */}
-              <div>
-                <Label htmlFor="identifier">
-                  {identifierType === 'phone' ? 'Phone' : 'Email'}
+              <div className="space-y-1.5">
+                <Label htmlFor="identifier" className="text-sm font-medium">
+                  {identifierType === 'phone' ? 'Phone Number' : 'Email Address'}
                 </Label>
-                <Input
-                  id="identifier"
-                  value={formData.identifier}
-                  onChange={handleChange}
-                  disabled={isPending}
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60">
+                    {identifierType === 'phone' ? (
+                      <Phone className="h-4 w-4" />
+                    ) : (
+                      <Mail className="h-4 w-4" />
+                    )}
+                  </div>
+                  <Input
+                    id="identifier"
+                    type={identifierType === 'email' ? 'email' : 'text'}
+                    placeholder={
+                      identifierType === 'phone' 
+                        ? '0712 345 678' 
+                        : 'you@example.com'
+                    }
+                    className="pl-10 h-11"
+                    value={formData.identifier}
+                    onChange={handleChange}
+                    disabled={isPending}
+                  />
+                </div>
                 {errors.identifier && (
-                  <p className="text-xs text-destructive">{errors.identifier}</p>
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <span className="inline-block h-1 w-1 rounded-full bg-destructive" />
+                    {errors.identifier}
+                  </p>
                 )}
               </div>
 
               {/* Password */}
-              <div>
-                <Label htmlFor="password">Password</Label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                </div>
                 <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60">
+                    <Lock className="h-4 w-4" />
+                  </div>
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    className="pl-10 pr-12 h-11"
                     value={formData.password}
                     onChange={handleChange}
                     disabled={isPending}
@@ -179,30 +223,68 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password}</p>
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <span className="inline-block h-1 w-1 rounded-full bg-destructive" />
+                    {errors.password}
+                  </p>
                 )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? 'Signing in...' : 'Sign In'}
-                {!isPending && <ArrowRight className="ml-2 w-4 h-4" />}
+              {/* ✨ Forgot Password Link - Added Here ✨ */}
+              <div className="flex items-center justify-end">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 hover:underline underline-offset-4"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow duration-300"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Signing in...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Sign In
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                )}
               </Button>
             </form>
           </CardContent>
 
-          <CardFooter className="justify-center">
-            <p className="text-sm">
-              No account?{' '}
-              <Link href="/signup" className="text-primary">
+          <CardFooter className="flex flex-col gap-4 border-t pt-6">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <Link 
+                href="/signup" 
+                className="text-primary font-medium hover:underline underline-offset-4 transition-colors"
+              >
                 Sign up
               </Link>
             </p>
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+              <Shield className="h-3 w-3" />
+              <span>Your data is encrypted and secure</span>
+            </div>
           </CardFooter>
         </Card>
       </div>

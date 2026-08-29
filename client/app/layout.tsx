@@ -1,4 +1,4 @@
-import { Inter, JetBrains_Mono, Geist } from "next/font/google";
+import { JetBrains_Mono, Manrope, Fraunces } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
 import {
   ConditionalNavbar,
@@ -10,17 +10,21 @@ import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/auth-provider";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-const inter = Inter({
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
-  variable: "--font-geist-mono",
   display: "swap",
 });
 
@@ -35,13 +39,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("font-sans", geist.variable)}
-    >
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`
+          ${manrope.variable}
+          ${fraunces.variable}
+          ${jetbrainsMono.variable}
+        `}
       >
         <ThemeProvider
           attribute="class"

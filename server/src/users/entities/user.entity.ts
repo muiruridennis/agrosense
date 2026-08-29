@@ -2,6 +2,8 @@ import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Farm } from '../../farms/entities/farm.entity';
 import { FarmMember } from '../../farm-members/entities/farm-member.entity';
+import { Notification } from '../../notifications/entities/notification.entity';
+import { PasswordResetToken } from '../../password-reset/entities/password-reset-token.entity';
 
 export enum UserRole {
   FARMER = 'farmer',
@@ -12,7 +14,7 @@ export enum UserRole {
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true, nullable: true, type: 'varchar' })
-  email!: string | null;
+  email!: string;
 
   @Index()
   @Column({ type: 'varchar', unique: true })
@@ -26,6 +28,12 @@ export class User extends BaseEntity {
 
   @Column({ type: 'boolean', default: false })
   isPhoneVerified!: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isEmailVerified!: boolean;
+
+  @OneToMany(() => PasswordResetToken, (resetToken) => resetToken.user)
+  passwordResetTokens!: PasswordResetToken[];
 
   @Column({ type: 'varchar', default: 'en', length: 10 })
   preferredLanguage!: string;
@@ -43,6 +51,7 @@ export class User extends BaseEntity {
   farms!: Farm[];
 
   @OneToMany(() => FarmMember, (member) => member.user)
-farmMembers!: FarmMember[];
- 
+  farmMembers!: FarmMember[];
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 }

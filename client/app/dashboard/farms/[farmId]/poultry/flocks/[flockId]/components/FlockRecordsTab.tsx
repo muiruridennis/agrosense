@@ -16,18 +16,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 import {
   useFlockRecords,
   useDeleteFlockRecord,
+  useSubmitRecord,
+  useReviewRecord,
 } from "../../../hooks/usePoultry";
-import { RecordForm } from "../../../components/RecordForm";
 import { FlockRecordsChart } from "../../../components/FlockRecordsChart";
-import { RecordDetailDialog } from "./RecordDetail";
-import { FlockRecordsTable } from "./FlockRecordsTable";
+import { RecordForm } from "../../../components/RecordForm";
+import { ReviewPanel } from "../../../components/records/ReviewPanel";
+import { useFarmRole } from "@/providers/FarmRoleContext";
+import type { Flock, FlockRecord } from "@/types";
+import { RecordDetailDialog } from "../../../components/records/RecordDetailDialog";
+import { FlockDetailsSheet } from "../../../components/FlockDetailsSheet";
 import { DeleteRecordDialog } from "../../../components/DeleteRecordDialog";
-import type { Flock, FlockRecord } from "../../../types";
-import { toast } from "sonner";
+import { FlockRecordsTable } from "../../../components/records/FlockRecordsTable";
+import { useAuth } from "@/providers/auth-provider";
 
 interface FlockRecordsTabProps {
   flock: Flock;
@@ -37,39 +43,55 @@ interface FlockRecordsTabProps {
 const ITEMS_PER_PAGE = 10;
 
 export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
+  const { role } = useFarmRole();
+  const { user } = useAuth();
+  const userId = user?.id;
+  const isOwner = role === "owner";
+  const isManager = role === "manager" || role === "owner";
+
   // Record form states
   const [createFormOpen, setCreateFormOpen] = useState(false);
   const [editFormOpen, setEditFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<FlockRecord | null>(null);
-  const [deletingRecord, setDeletingRecord] = useState<FlockRecord | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState<FlockRecord | null>(
+    null,
+  );
   const [viewRecord, setViewRecord] = useState<FlockRecord | null>(null);
+  const [reviewRecord, setReviewRecord] = useState<FlockRecord | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: records, isLoading } = useFlockRecords(farmId, flock.id);
-  const deleteMutation = useDeleteFlockRecord(farmId, deletingRecord?.id);
+  const {
+    data: records,
+    isLoading,
+    refetch,
+  } = useFlockRecords(farmId, flock.id);
+  const deleteMutation = useDeleteFlockRecord(farmId);
+  const submitRecord = useSubmitRecord(farmId);
+  const reviewRecordMutation = useReviewRecord(farmId);
 
-  const recordsArray = Array.isArray(records) ? records : [];
+  const recordsArray = Array.isArray(records) ? records : ([] as FlockRecord[]);
 
   const sortedRecords = [...recordsArray].sort(
-    (a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime()
+    (a, b) =>
+      new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime(),
   );
 
   const totalPages = Math.ceil(sortedRecords.length / ITEMS_PER_PAGE);
   const paginatedRecords = sortedRecords.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   // Summary stats
   const totalRecords = recordsArray.length;
   const totalMortality = recordsArray.reduce(
     (sum, r) => sum + (r.mortality || 0),
-    0
+    0,
   );
   const totalEggs = recordsArray.reduce(
     (sum, r) => sum + (r.morningEggs || 0) + (r.eveningEggs || 0),
-    0
+    0,
   );
   const avgFeed =
     recordsArray.length > 0
@@ -86,31 +108,88 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
     );
   }
 
+  // ── Submit Handler ──
+
+  // ── Submit Handler ──
+  const handleSubmit = (record: FlockRecord) => {
+    submitRecord.mutate(record.id, {
+      onSuccess: () => {
+        refetch();
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to submit record",
+        );
+      },
+    });
+  };
+
+  // ── Review Handler ──
+  const handleReview = (record: FlockRecord) => {
+    setReviewRecord(record);
+  };
+
+  const handleReviewConfirm = (
+    status: "reviewed" | "flagged",
+    note?: string,
+  ) => {
+    if (!reviewRecord) return;
+    reviewRecordMutation.mutate(
+      {
+        recordId: reviewRecord.id,
+        data: { status, reviewNote: note },
+      },
+      {
+        onSuccess: () => {
+          setReviewRecord(null);
+          toast.success(
+            status === "reviewed"
+              ? "Record approved"
+              : "Record flagged for revision",
+          );
+          refetch();
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to review record",
+          );
+        },
+      },
+    );
+  };
+
   // ── Delete Handlers ──
   const handleDelete = (record: FlockRecord) => {
-    // Only draft records can be deleted
+    if (isOwner) {
+      setDeletingRecord(record);
+      setDeleteDialogOpen(true);
+      return;
+    }
+
+    if (record.submittedById !== userId) {
+      toast.error("You can only delete your own records");
+      return;
+    }
+
     if (record.status !== "draft") {
       toast.error("Only draft records can be deleted");
       return;
     }
+
     setDeletingRecord(record);
     setDeleteDialogOpen(true);
   };
 
-  // ✅ This actually deletes the record using the mutation
   const handleDeleteConfirm = async () => {
     if (!deletingRecord) return;
     try {
       await deleteMutation.mutateAsync(deletingRecord.id);
       setDeleteDialogOpen(false);
       setDeletingRecord(null);
-      toast.success("Record deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete record");
-    }
+      refetch();
+    } catch (error) {}
   };
 
-  // ✅ Cleanup after delete
   const handleDeleteSuccess = () => {
     setDeleteDialogOpen(false);
     setDeletingRecord(null);
@@ -118,8 +197,8 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
 
   // ── Edit Handlers ──
   const handleEdit = (record: FlockRecord) => {
-    if (record.status !== "draft") {
-      toast.error("Only draft records can be edited");
+    if (record.status !== "draft" && record.status !== "flagged") {
+      toast.error("Only draft or flagged records can be edited");
       return;
     }
     setEditingRecord(record);
@@ -137,6 +216,12 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
   const handleEditSuccess = () => {
     setEditFormOpen(false);
     setEditingRecord(null);
+    refetch();
+  };
+
+  const handleFormSuccess = () => {
+    setCreateFormOpen(false);
+    refetch();
   };
 
   // ── Pagination ──
@@ -149,15 +234,15 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
   };
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight ">
+          <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             <CalendarDays className="h-5 w-5 text-primary" />
             Daily Performance Records
           </h3>
-          <p className="text-sm text-neutral-900">
+          <p className="text-sm text-muted-foreground">
             Production, mortality, feed, water and health tracking
           </p>
         </div>
@@ -193,17 +278,6 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
         />
       </div>
 
-      {/* Chart */}
-      <div className="rounded-xl border bg-card p-4 shadow-sm">
-        <FlockRecordsChart
-          farmId={farmId}
-          flockId={flock.id}
-          type={flock.type}
-          records={recordsArray}
-          isLoading={isLoading}
-        />
-      </div>
-
       {/* Table */}
       <div
         id="records-table"
@@ -233,6 +307,8 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
           onView={setViewRecord}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onSubmit={handleSubmit}
+          onReview={handleReview}
         />
 
         {/* Pagination */}
@@ -279,7 +355,7 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
                       onClick={() => handlePageChange(pageNum)}
                       className={cn(
                         "h-8 w-8 p-0 text-xs",
-                        isCurrent && "pointer-events-none"
+                        isCurrent && "pointer-events-none",
                       )}
                     >
                       {pageNum}
@@ -304,6 +380,16 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
           </div>
         )}
       </div>
+      {/* Chart */}
+      <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <FlockRecordsChart
+          farmId={farmId}
+          flockId={flock.id}
+          type={flock.type}
+          records={recordsArray}
+          isLoading={isLoading}
+        />
+      </div>
 
       {/* ── Create Record Form ── */}
       <RecordForm
@@ -312,7 +398,7 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
         farmId={farmId}
         flockId={flock.id}
         flockType={flock.type}
-        onSuccess={() => setCreateFormOpen(false)}
+        onSuccess={handleFormSuccess}
       />
 
       {/* ── Edit Record Form ── */}
@@ -331,7 +417,7 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         record={deletingRecord}
-        onDeleteConfirm={handleDeleteConfirm} 
+        onDeleteConfirm={handleDeleteConfirm}
         onSuccess={handleDeleteSuccess}
         isPending={deleteMutation.isPending}
       />
@@ -339,11 +425,24 @@ export function FlockRecordsTab({ flock, farmId }: FlockRecordsTabProps) {
       {/* ── View Record Detail ── */}
       {viewRecord && (
         <RecordDetailDialog
-          open
-          record={viewRecord}
-          flockType={flock.type}
+          open={!!viewRecord}
           onOpenChange={() => setViewRecord(null)}
+          record={viewRecord}
           onEdit={handleViewEdit}
+          onSubmit={() => handleSubmit(viewRecord)}
+          onDelete={() => handleDelete(viewRecord)}
+          onReview={() => handleReview(viewRecord)}
+        />
+      )}
+
+      {/* ── Review Panel (Manager only) ── */}
+      {isManager && (
+        <ReviewPanel
+          open={!!reviewRecord}
+          onOpenChange={() => setReviewRecord(null)}
+          record={reviewRecord}
+          onReview={handleReviewConfirm}
+          isPending={reviewRecordMutation.isPending}
         />
       )}
     </div>
@@ -380,7 +479,7 @@ function StatCard({
     <div
       className={cn(
         "rounded-xl border p-4 transition-all hover:shadow-sm",
-        toneStyles[tone]
+        toneStyles[tone],
       )}
     >
       <div className="flex items-center gap-2 text-muted-foreground">

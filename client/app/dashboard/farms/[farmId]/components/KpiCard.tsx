@@ -14,7 +14,15 @@ interface KpiCardProps {
     value: number;
     isPositive: boolean;
   };
-  color?: "teal" | "emerald" | "blue" | "rose" | "purple" | "amber" | "slate" | "green";
+  color?:
+    | "teal"
+    | "emerald"
+    | "blue"
+    | "rose"
+    | "purple"
+    | "amber"
+    | "slate"
+    | "green";
   size?: "default" | "sm" | "lg";
   className?: string;
   children: React.ReactNode;
@@ -73,22 +81,16 @@ export function KpiCard({
       className={cn(
         "group relative overflow-hidden border shadow-sm transition-all duration-200 hover:shadow-md",
         style?.borderTop,
-        "border-t-2"
+        "border-t-2",
       )}
     >
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1.5">
-            <p className="text-sm font-medium text-muted-foreground">
-              {title}
-            </p>
-            <p className="text-2xl font-semibold tracking-tight">
-              {value}
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-semibold tracking-tight">{value}</p>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">
-                {subtitle}
-              </p>
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
             )}
           </div>
           <div className={cn("rounded-lg p-2", style?.iconBg)}>
@@ -113,9 +115,7 @@ export function KpiCard({
                 </span>
               </>
             )}
-            <span className="text-xs text-muted-foreground">
-              vs last month
-            </span>
+            <span className="text-xs text-muted-foreground">vs last month</span>
           </div>
         )}
       </div>

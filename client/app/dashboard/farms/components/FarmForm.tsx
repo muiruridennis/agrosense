@@ -27,8 +27,6 @@ import {
 import { cn } from "@/lib/utils";
 import { FarmFormData, farmSchema } from "../types";
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,26 +36,74 @@ import { FarmFormData, farmSchema } from "../types";
  * Add more as the product expands.
  */
 const TIMEZONES = [
-  { value: "Africa/Nairobi",     label: "East Africa Time — Nairobi (EAT, UTC+3)" },
-  { value: "Africa/Johannesburg",label: "South Africa Standard — Johannesburg (SAST, UTC+2)" },
-  { value: "Africa/Lagos",       label: "West Africa Time — Lagos (WAT, UTC+1)" },
-  { value: "Africa/Accra",       label: "Greenwich Mean — Accra (GMT, UTC+0)" },
-  { value: "Africa/Cairo",       label: "Eastern European — Cairo (EET, UTC+2)" },
-  { value: "Africa/Dar_es_Salaam", label: "East Africa — Dar es Salaam (EAT, UTC+3)" },
-  { value: "Africa/Kampala",     label: "East Africa — Kampala (EAT, UTC+3)" },
-  { value: "Africa/Kigali",      label: "Central Africa — Kigali (CAT, UTC+2)" },
-  { value: "Africa/Addis_Ababa", label: "East Africa — Addis Ababa (EAT, UTC+3)" },
+  { value: "Africa/Nairobi", label: "East Africa Time — Nairobi (EAT, UTC+3)" },
+  {
+    value: "Africa/Johannesburg",
+    label: "South Africa Standard — Johannesburg (SAST, UTC+2)",
+  },
+  { value: "Africa/Lagos", label: "West Africa Time — Lagos (WAT, UTC+1)" },
+  { value: "Africa/Accra", label: "Greenwich Mean — Accra (GMT, UTC+0)" },
+  { value: "Africa/Cairo", label: "Eastern European — Cairo (EET, UTC+2)" },
+  {
+    value: "Africa/Dar_es_Salaam",
+    label: "East Africa — Dar es Salaam (EAT, UTC+3)",
+  },
+  { value: "Africa/Kampala", label: "East Africa — Kampala (EAT, UTC+3)" },
+  { value: "Africa/Kigali", label: "Central Africa — Kigali (CAT, UTC+2)" },
+  {
+    value: "Africa/Addis_Ababa",
+    label: "East Africa — Addis Ababa (EAT, UTC+3)",
+  },
 ] as const;
 
 const KENYA_COUNTIES = [
-  "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
-  "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho",
-  "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu", "Kitui",
-  "Kwale", "Laikipia", "Lamu", "Machakos", "Makueni", "Mandera",
-  "Marsabit", "Meru", "Migori", "Mombasa", "Murang'a", "Nairobi",
-  "Nakuru", "Nandi", "Narok", "Nyamira", "Nyandarua", "Nyeri",
-  "Samburu", "Siaya", "Taita-Taveta", "Tana River", "Tharaka-Nithi",
-  "Trans-Nzoia", "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
+  "Baringo",
+  "Bomet",
+  "Bungoma",
+  "Busia",
+  "Elgeyo-Marakwet",
+  "Embu",
+  "Garissa",
+  "Homa Bay",
+  "Isiolo",
+  "Kajiado",
+  "Kakamega",
+  "Kericho",
+  "Kiambu",
+  "Kilifi",
+  "Kirinyaga",
+  "Kisii",
+  "Kisumu",
+  "Kitui",
+  "Kwale",
+  "Laikipia",
+  "Lamu",
+  "Machakos",
+  "Makueni",
+  "Mandera",
+  "Marsabit",
+  "Meru",
+  "Migori",
+  "Mombasa",
+  "Murang'a",
+  "Nairobi",
+  "Nakuru",
+  "Nandi",
+  "Narok",
+  "Nyamira",
+  "Nyandarua",
+  "Nyeri",
+  "Samburu",
+  "Siaya",
+  "Taita-Taveta",
+  "Tana River",
+  "Tharaka-Nithi",
+  "Trans-Nzoia",
+  "Turkana",
+  "Uasin Gishu",
+  "Vihiga",
+  "Wajir",
+  "West Pokot",
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -144,14 +190,14 @@ export function FarmForm({
   const form = useForm<FarmFormData>({
     resolver: zodResolver(farmSchema),
     defaultValues: {
-      name:         defaultValues?.name         ?? "",
-      description:  defaultValues?.description  ?? "",
-      country:      defaultValues?.country       ?? "Kenya",
-      region:       defaultValues?.region        ?? "",
-      subRegion:    defaultValues?.subRegion     ?? "",
-      timezone:     defaultValues?.timezone      ?? "Africa/Nairobi",
+      name: defaultValues?.name ?? "",
+      description: defaultValues?.description ?? "",
+      country: defaultValues?.country ?? "Kenya",
+      region: defaultValues?.region ?? "",
+      subRegion: defaultValues?.subRegion ?? "",
+      timezone: defaultValues?.timezone ?? "Africa/Nairobi",
       areaHectares: defaultValues?.areaHectares ?? undefined,
-      location:     defaultValues?.location ?? undefined,
+      location: defaultValues?.location ?? undefined,
     },
   });
 
@@ -167,7 +213,7 @@ export function FarmForm({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         form.setValue("location", {
-          latitude:  parseFloat(pos.coords.latitude.toFixed(6)),
+          latitude: parseFloat(pos.coords.latitude.toFixed(6)),
           longitude: parseFloat(pos.coords.longitude.toFixed(6)),
         });
         setIsLocating(false);
@@ -184,16 +230,14 @@ export function FarmForm({
     );
   };
 
-  const handleCoordInput = (
-    field: "latitude" | "longitude",
-    raw: string,
-  ) => {
+  const handleCoordInput = (field: "latitude" | "longitude", raw: string) => {
     const parsed = parseFloat(raw);
     const current = form.getValues("location");
 
     if (raw === "" || isNaN(parsed)) {
       // Clear the whole location object if both coords would be empty
-      const other = field === "latitude" ? current?.longitude : current?.latitude;
+      const other =
+        field === "latitude" ? current?.longitude : current?.latitude;
       if (other === undefined || isNaN(other)) {
         form.setValue("location", undefined);
       }
@@ -201,7 +245,7 @@ export function FarmForm({
     }
 
     form.setValue("location", {
-      latitude:  field === "latitude"  ? parsed : (current?.latitude  ?? 0),
+      latitude: field === "latitude" ? parsed : (current?.latitude ?? 0),
       longitude: field === "longitude" ? parsed : (current?.longitude ?? 0),
     });
   };
@@ -214,14 +258,15 @@ export function FarmForm({
         outside the modal when tab content changes height.
       */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-
         {/* ── Farm name ── */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Farm name <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>
+                Farm name <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder="e.g., Kamau's Githunguri Dairy Farm"
@@ -274,7 +319,9 @@ export function FarmForm({
                     name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Country <span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>
+                          Country <span className="text-destructive">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -293,8 +340,13 @@ export function FarmForm({
                     name="region"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>County <span className="text-destructive">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel>
+                          County <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select county" />
@@ -404,7 +456,8 @@ export function FarmForm({
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  GPS coordinates enable weather forecasting and satellite farm monitoring
+                  GPS coordinates enable weather forecasting and satellite farm
+                  monitoring
                 </p>
               </div>
             )}
@@ -417,7 +470,9 @@ export function FarmForm({
           name="areaHectares"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Farm size (hectares) <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>
+                Farm size (hectares) <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -484,7 +539,9 @@ export function FarmForm({
             </Button>
           )}
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+            {isLoading && (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            )}
             {isLoading ? "Saving…" : submitLabel}
           </Button>
         </div>

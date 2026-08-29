@@ -1,59 +1,96 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseEntity } from '../../common/entities/base.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  OneToMany,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
+import { NotificationDelivery } from './notification-delivery.entity';
 import { User } from '../../users/entities/user.entity';
-
-export enum NotificationChannel {
-  IN_APP = 'in_app',
-  SMS = 'sms',
-  PUSH = 'push',
-}
-
-export enum NotificationStatus {
-  PENDING = 'pending',
-  SENT = 'sent',
-  FAILED = 'failed',
-  READ = 'read',
-}
+import {
+  NotificationChannel,
+  NotificationPriority,
+  NotificationStatus,
+} from '../enums';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity('notifications')
+@Index(['userId', 'createdAt'])
+@Index(['farmId', 'createdAt'])
+@Index(['status', 'createdAt'])
 export class Notification extends BaseEntity {
-  @Index()
-  @Column({ type: 'uuid' })
-  userId!: string;
+  @Column('uuid', { nullable: true })
+  userId: string | null;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.notifications, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId' })
-  user!: User;
+  user: User | null;
 
-  @Column({ type: 'enum', enum: NotificationChannel })
-  channel!: NotificationChannel;
+  @Column('uuid', { nullable: true })
+  farmId: string | null;
+
+  @Column('varchar', { length: 50, nullable: true })
+  role: string | null;
+
+  // ── Content ──
+
+  @Column('varchar', { length: 255 })
+  title: string;
+
+  @Column('text')
+  body: string;
+
+  @Column('jsonb', { nullable: true })
+  data: Record<string, any> | null;
+
+  // ── Delivery ──
+
+  @Column({
+    type: 'enum',
+    enum: NotificationChannel,
+    array: true,
+  })
+  channels: NotificationChannel[];
+
+  @Column({
+    type: 'enum',
+    enum: NotificationPriority,
+    default: NotificationPriority.MEDIUM,
+  })
+  priority: NotificationPriority;
 
   @Column({
     type: 'enum',
     enum: NotificationStatus,
     default: NotificationStatus.PENDING,
   })
-  status!: NotificationStatus;
+  status: NotificationStatus;
 
-  @Column({ type: 'varchar' })
-  title!: string;
+  @Column('varchar', { length: 100, nullable: true })
+  category: string | null;
 
-  @Column({ type: 'text' })
-  body!: string;
+  @Column('varchar', { length: 255, nullable: true })
+  referenceId: string | null;
 
-  @Column({ type: 'jsonb', nullable: true, default: null })
-  data!: Record<string, unknown> | null; // deeplink, farmId, alertId, etc.
+  // ── Scheduling ──
 
-  @Column({ type: 'text', nullable: true })
-  failureReason!: string | null;
+  @Column('timestamptz', { nullable: true })
+  scheduledFor: Date | null;
 
-  @Column({ type: 'timestamptz', nullable: true })
-  sentAt!: Date | null;
+  @Column('timestamptz', { nullable: true })
+  deliveredAt: Date | null;
 
-  @Column({ type: 'timestamptz', nullable: true })
-  readAt!: Date | null;
+  @Column('timestamptz', { nullable: true })
+  readAt: Date | null;
+  // ── Relationships ──
 
-  // External provider message ID (Africa's Talking messageId, FCM messageId)
-  @Column({ type: 'varchar', nullable: true })
-  providerMessageId!: string | null;
+  @OneToMany(() => NotificationDelivery, (delivery) => delivery.notification)
+  deliveries: NotificationDelivery[];
 }

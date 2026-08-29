@@ -1,11 +1,13 @@
-// app/dashboard/farms/[farmId]/layout.tsx
 "use client";
 
 import { useParams } from "next/navigation";
-import { FarmContextBar } from "./components/FarmContextBar.tsx";
+import { FarmContextBar } from "./components/FarmContextBar";
 import { FarmSidebar } from "./components/FarmSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFarm } from "../hooks/useFarms";
+import { useAuth } from "@/providers/auth-provider";
+import { FarmMemberRole } from "@/types";
+import { FarmRoleProvider } from "@/providers/FarmRoleContext";
 
 export default function FarmLayout({
   children,
@@ -13,6 +15,7 @@ export default function FarmLayout({
   children: React.ReactNode;
 }) {
   const { farmId } = useParams();
+  const { user } = useAuth();
   const { data: farm, isLoading } = useFarm(farmId as string);
 
   if (isLoading) {
@@ -39,16 +42,19 @@ export default function FarmLayout({
       </div>
     );
   }
+  // ✅ Determine the user's role for this farm
+  const membership = farm.members?.find((m) => m.userId === user?.id);
+  const userRole = membership?.role || FarmMemberRole.WORKER;
 
   return (
-    <div className="space-y-5">
-      <FarmContextBar farm={farm} />
-      <div className="flex gap-6">
-        <FarmSidebar farmId={farm.id} farmName={farm.name} />
-        <div className="flex-1 min-w-0">
-          {children}
+    <FarmRoleProvider role={userRole} farmId={farm.id}>
+      <div className="space-y-5">
+        <FarmContextBar farm={farm}  userRole={userRole} />
+        <div className="flex gap-6">
+          <FarmSidebar farmId={farm.id} role={userRole} />
+          <div className="flex-1 min-w-0">{children}</div>
         </div>
       </div>
-    </div>
+    </FarmRoleProvider>
   );
 }

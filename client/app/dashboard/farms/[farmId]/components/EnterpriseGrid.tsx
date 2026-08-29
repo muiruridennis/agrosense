@@ -40,7 +40,14 @@ interface EnterpriseCardProps {
   empty?: boolean;
 }
 
-function EnterpriseCard({ icon: Icon, label, status, lines, href, empty }: EnterpriseCardProps) {
+function EnterpriseCard({
+  icon: Icon,
+  label,
+  status,
+  lines,
+  href,
+  empty,
+}: EnterpriseCardProps) {
   const router = useRouter();
   const config = STATUS_CONFIG[status];
   const StatusIcon = config.icon;
@@ -75,16 +82,24 @@ function EnterpriseCard({ icon: Icon, label, status, lines, href, empty }: Enter
         </div>
 
         {empty ? (
-          <p className="text-sm text-muted-foreground/60">No data yet — click to set up</p>
+          <p className="text-sm text-muted-foreground/60">
+            No data yet — click to set up
+          </p>
         ) : (
           <div className="grid grid-cols-2 gap-y-3 gap-x-4">
             {lines.map((line) => (
               <div key={line.key} className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground/70">{line.key}</span>
-                <span className={cn(
-                  "text-sm font-medium",
-                  line.highlight ? "text-foreground" : "text-muted-foreground",
-                )}>
+                <span className="text-xs text-muted-foreground/70">
+                  {line.key}
+                </span>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    line.highlight
+                      ? "text-foreground"
+                      : "text-muted-foreground",
+                  )}
+                >
                   {line.value}
                 </span>
               </div>
@@ -111,8 +126,12 @@ export function EnterpriseGrid({ enterprises }: EnterpriseGridProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Enterprise Modules</h2>
-        <span className="text-xs text-muted-foreground/60">Click any card to manage</span>
+        <h2 className="text-sm font-semibold text-foreground">
+          Enterprise Modules
+        </h2>
+        <span className="text-xs text-muted-foreground/60">
+          Click any card to manage
+        </span>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {enterprises.map((enterprise, i) => (

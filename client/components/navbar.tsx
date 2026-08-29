@@ -4,8 +4,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Leaf, ChevronDown } from "lucide-react";
+import { Menu, X, Bird, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   label: string;
@@ -13,20 +14,25 @@ interface NavItem {
   children?: NavItem[];
 }
 
+// Poultry-focused navigation
 const publicNavItems: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
+  { label: "Market", href: "/market" },
   { label: "Pricing", href: "/pricing" },
-  { label: "About", href: "/about" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "/contact" },
+  { label: "Resources", href: "/resources" },
 ];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,33 +42,51 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  const themeIcon = mounted ? (
+    theme === "dark" ? (
+      <Sun className="w-4 h-4" />
+    ) : (
+      <Moon className="w-4 h-4" />
+    )
+  ) : (
+    <Sun className="w-4 h-4" />
+  );
+
   return (
     <header
-      className={`fixed top-0 w-full z-50 transition-all duration-300 mb-2 ${
+      className={cn(
+        "fixed top-0 w-full z-100 transition-all duration-300",
         isScrolled
-          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-xs"
-          : "bg-transparent"
-      }`}
+          ? "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
+          : "bg-background border-b border-border/50",
+      )}
     >
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all" />
-              <Leaf className="w-7 h-7 text-primary relative z-10" />
+          {/* ========================================
+              LOGO
+          ======================================== */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/25 transition-transform duration-300 group-hover:scale-105">
+              <Bird className="h-4.5 w-4.5 text-[#070B14]" />
             </div>
-            <span className="text-xl font-semibold tracking-tight text-foreground">
-              Agro<span className="text-primary">Sense</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight text-foreground">
+                Agro<span className="text-amber-400">Sense</span>
+              </span>
+              <span className="hidden rounded-full bg-amber-400/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400/80 lg:inline-block">
+                Poultry
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* ========================================
+              DESKTOP NAVIGATION
+          ======================================== */}
           <div className="hidden lg:flex items-center gap-1">
             {publicNavItems.map((item) => {
               const isActive =
@@ -71,72 +95,75 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={cn(
+                    "group relative px-3.5 py-2 text-sm font-medium transition-colors duration-200",
                     isActive
-                      ? "text-primary bg-primary/5"
-                      : "text-foreground/70 hover:text-foreground hover:bg-muted"
-                  }`}
+                      ? "text-foreground"
+                      : "text-foreground/70 hover:text-foreground",
+                  )}
                 >
-                  {item.label}
+                  <span className="relative z-10">{item.label}</span>
+
+                  {/* Active indicator */}
                   {isActive && (
-                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+                    <span className="absolute bottom-1 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-amber-400" />
                   )}
                 </Link>
               );
             })}
           </div>
 
-          {/* Right side - Actions */}
-          <div className="flex items-center gap-3">
+          {/* ========================================
+              RIGHT ACTIONS
+          ======================================== */}
+          <div className="flex items-center gap-2">
             {/* Theme Toggle */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-md text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+              className="h-9 w-9 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-all duration-200 hover:scale-105 active:scale-95"
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
+              {themeIcon}
             </button>
 
-            {/* CTA Buttons */}
-            <div className="hidden lg:flex items-center gap-3">
+            {/* Desktop CTA Buttons */}
+            <div className="hidden lg:flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
+                className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-muted rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                className="px-5 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md shadow-primary/20"
               >
-                Get Started
+                Start Free Trial
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+              className="lg:hidden h-9 w-9 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-all duration-200 hover:scale-105 active:scale-95"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 mx-auto" />
               ) : (
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5 mx-auto" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* ========================================
+            MOBILE MENU
+        ======================================== */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-16 left-0 right-0 bg-card border-b border-border shadow-lg animate-fade-in z-50">
+          <div className="lg:hidden absolute left-0 right-0 top-16 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-lg animate-fade-in z-[101]">
             <div className="container mx-auto px-4 py-4">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
                 {publicNavItems.map((item) => {
                   const isActive = pathname === item.href;
                   return (
@@ -144,75 +171,42 @@ export function Navbar() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`px-4 py-3 text-base font-medium rounded-md transition-colors ${
+                      className={cn(
+                        "px-4 py-3 text-base font-medium rounded-lg transition-all duration-200",
+                        "hover:scale-[1.02] active:scale-[0.98]",
                         isActive
                           ? "bg-primary/10 text-primary"
-                          : "text-foreground/70 hover:text-foreground hover:bg-muted"
-                      }`}
+                          : "text-foreground/70 hover:text-foreground hover:bg-muted",
+                      )}
                     >
                       {item.label}
                     </Link>
                   );
                 })}
 
-                <hr className="my-2 border-border" />
+                <hr className="my-2 border-border/50" />
 
                 <Link
-                  href="/auth/login"
+                  href="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-4 py-3 text-base font-medium text-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                  className="px-4 py-3 text-base font-medium text-center text-foreground/70 hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-4 py-3 text-base font-medium text-center bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  className="px-4 py-3 text-base font-semibold text-center bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
-                  Get Started
+                  Start Free Trial
                 </Link>
               </div>
             </div>
           </div>
         )}
-      </nav>
+      </div>
     </header>
   );
 }
 
-// Icons
-function Sun(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-      />
-    </svg>
-  );
-}
-
-function Moon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-      />
-    </svg>
-  );
-}
+export default Navbar;

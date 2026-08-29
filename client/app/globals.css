@@ -1,148 +1,338 @@
 /* ───────────────────────────────────────────────────────────────
-   AgroSense — Global Styles (Tailwind v4)
+   AgroSense — Design System v3
+   "Warm Neutral + Navy + Amber"
+
+   COLOR HIERARCHY
+   ───────────────────────────────────────────────────────────────
+   Black      → #09090B  (Primary text)
+   Navy       → #172554  (Brand, trust, primary actions)
+   Slate      → #475569  (Secondary text, muted)
+   Amber      → #F59E0B  (Accent, energy, highlights)
+   Warm White → #FAFAF9  (Background)
+   White      → #FFFFFF  (Cards, elevated surfaces)
    ─────────────────────────────────────────────────────────────── */
 
 @import "tailwindcss";
 
-/* ── 1. Theme Tokens (Tailwind v4) ────────────────────────────── */
-/*
-   @theme holds static values resolved at build time.
-   These drive Tailwind utility generation (bg-primary, text-foreground, etc).
-   For dark mode, CSS custom properties in .dark override the runtime values
-   that components reference via var(--color-*).
-*/
+/* ═══════════════════════════════════════════════════════════════
+   1. DESIGN TOKENS — LIGHT MODE
+   ═══════════════════════════════════════════════════════════════ */
+
 @theme {
-  --color-primary:              hsl(160, 65%, 36%);
-  --color-primary-foreground:   hsl(0, 0%, 100%);
-  --color-secondary:            hsl(152, 45%, 94%);
-  --color-secondary-foreground: hsl(162, 75%, 14%);
-  --color-accent:               hsl(28, 72%, 52%);
-  --color-accent-foreground:    hsl(0, 0%, 100%);
-  --color-destructive:          hsl(1, 73%, 56%);
-  --color-destructive-foreground: hsl(0, 0%, 100%);
 
-  --color-background:           hsl(160, 4%, 98%);
-  --color-foreground:           hsl(40, 10%, 13%);
-  --color-card:                 hsl(0, 0%, 100%);
-  --color-card-foreground:      hsl(40, 10%, 13%);
-  --color-popover:              hsl(0, 0%, 100%);
-  --color-popover-foreground:   hsl(40, 10%, 13%);
-  --color-muted:                hsl(160, 6%, 95%);
-  --color-muted-foreground:     hsl(40, 5%, 42%);
-  --color-border:               hsl(36, 10%, 84%);
-  --color-input:                hsl(36, 10%, 84%);
-  --color-ring:                 hsl(160, 65%, 36%);
+  /* ─────────────────────────────────────────────────────────────
+     SURFACES — Warm & Clean
+     ───────────────────────────────────────────────────────────── */
 
-  --color-success:              hsl(138, 55%, 40%);
-  --color-success-foreground:   hsl(0, 0%, 100%);
-  --color-warning:              hsl(42, 90%, 52%);
-  --color-warning-foreground:   hsl(40, 10%, 13%);
-  --color-info:                 hsl(211, 69%, 54%);
-  --color-info-foreground:      hsl(0, 0%, 100%);
-  --color-black:                hsl(0, 0%, 0%);
+  --color-background: #F1F5F9;          /* Warm off-white — page */
+  --color-background-elevated: #FFFFFF; /* White — cards, panels */
+  --color-background-subtle: #F5F5F4;   /* Subtle — hover states */
 
-   /* Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
 
-  /* Fonts */
-  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* ─────────────────────────────────────────────────────────────
+     TEXT HIERARCHY — Clear & Readable
+     ───────────────────────────────────────────────────────────── */
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --color-foreground: #09090B;          /* Near-black — primary text */
+  --color-foreground-muted: #475569;    /* Slate — secondary text */
+  --color-foreground-subtle: #64748B;   /* Low-emphasis text */
 
+
+  /* ─────────────────────────────────────────────────────────────
+     CARDS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #09090B;
+  --color-card-border: #E4E4E7;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     UI SURFACES
+     ───────────────────────────────────────────────────────────── */
+
+  --color-muted: #F1F5F9;               /* Muted surface */
+  --color-muted-foreground: #334155;    /* Text on muted surface */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     BORDERS & INPUTS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-border: #E2E8F0;
+  --color-input: #CBD5E1;
+  --color-ring: #F59E0B;              /* Amber -- matches --color-accent */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     BRAND — Navy + Amber
+     ───────────────────────────────────────────────────────────── */
+
+  --color-primary: #172554;             /* Deep navy — brand */
+  --color-primary-foreground: #FFFFFF;
+
+  --color-accent: #F59E0B;              /* Amber — energy, value */
+  --color-accent-foreground: #111827;
+  --color-accent-light: #FEF3C7;
+  --color-accent-dark: #D97706;
+  --color-accent-subtle: #F59E0B1A;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     STATUS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-success: #16A34A;
+  --color-success-foreground: #FFFFFF;
+  --color-success-bg: #DCFCE7;
+
+  --color-warning: #D97706;
+  --color-warning-foreground: #FFFFFF;
+  --color-warning-bg: #FEF3C7;
+
+  --color-danger: #DC2626;
+  --color-danger-foreground: #FFFFFF;
+  --color-danger-bg: #FEE2E2;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     DOMAIN COLORS — Product Meaning
+     ───────────────────────────────────────────────────────────── */
+
+  --color-flock: #EEF2FF;
+  --color-flock-foreground: #4338CA;
+
+  --color-health: #CCFBF1;
+  --color-health-foreground: #0F766E;
+
+  --color-production: #FFEDD5;
+  --color-production-foreground: #C2410C;
+
+  --color-market: #FEF9C3;
+  --color-market-foreground: #A16207;
+
+  --color-finance: #DCFCE7;
+  --color-finance-foreground: #15803D;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     MARKET / CONTROL ROOM (Always Dark)
+     ───────────────────────────────────────────────────────────── */
+
+  --color-market-bg: #0B1120;
+  --color-market-card-bg: #111827;
+  --color-market-border: #263244;
+  --color-market-text: #F8FAFC;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     GLASS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-glass: rgba(255, 255, 255, 0.70);
+  --color-glass-border: rgba(226, 232, 240, 0.30);
+  --color-glass-shadow: rgba(9, 9, 11, 0.08);
+
+
+  /* ─────────────────────────────────────────────────────────────
+     RADIUS
+     ───────────────────────────────────────────────────────────── */
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-full: 9999px;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     TYPOGRAPHY
+     ───────────────────────────────────────────────────────────── */
+
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-manrope), system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     SHADOWS
+     ───────────────────────────────────────────────────────────── */
+
+  --shadow-xs: 0 1px 2px rgba(9, 9, 11, 0.04);
+  --shadow-sm: 0 1px 3px rgba(9, 9, 11, 0.06);
+  --shadow-md: 0 4px 12px rgba(9, 9, 11, 0.08);
+  --shadow-lg: 0 10px 30px rgba(9, 9, 11, 0.10);
+  --shadow-xl: 0 20px 50px rgba(9, 9, 11, 0.12);
+  --shadow-2xl: 0 30px 70px rgba(9, 9, 11, 0.15);
+
+  --shadow-glow: 0 0 40px rgba(245, 158, 11, 0.18);
+  --glow-amber: 0 0 60px rgba(245, 158, 11, 0.20);
+  --glow-blue: 0 0 60px rgba(23, 37, 84, 0.10);
 }
 
-/* ── 2. Dark Mode Overrides ───────────────────────────────────── */
-/*
-   Tailwind v4 reads --color-* at runtime too, so overriding them in .dark
-   makes dark-mode-aware utilities (e.g. dark:bg-background) work correctly.
-*/
+
+/* ═══════════════════════════════════════════════════════════════
+   2. DARK MODE — Deep & Warm
+   ═══════════════════════════════════════════════════════════════ */
+
 .dark {
-  --color-background:           hsl(40, 8%, 10%);
-  --color-foreground:           hsl(40, 20%, 95%);
 
-  --color-card:                 hsl(40, 6%, 15%);
-  --color-card-foreground:      hsl(40, 20%, 95%);
-  --color-popover:              hsl(40, 6%, 15%);
-  --color-popover-foreground:   hsl(40, 20%, 95%);
+  /* ─────────────────────────────────────────────────────────────
+     SURFACES
+     ───────────────────────────────────────────────────────────── */
 
-  --color-primary:              hsl(158, 68%, 37%);
-  --color-primary-foreground:   hsl(0, 0%, 100%);
-  --color-secondary:            hsl(163, 89%, 6%);
-  --color-secondary-foreground: hsl(152, 55%, 88%);
-  --color-accent:               hsl(38, 78%, 55%);
-  --color-accent-foreground:    hsl(0, 0%, 100%);
+  --color-background: #0B1120;
+  --color-background-elevated: #111827;
+  --color-background-subtle: #172033;
 
-  --color-muted:                hsl(40, 6%, 22%);
-  --color-muted-foreground:     hsl(38, 5%, 60%);
-  --color-destructive:          hsl(1, 73%, 58%);
-  --color-destructive-foreground: hsl(0, 0%, 100%);
 
-  --color-border:               hsl(40, 6%, 22%);
-  --color-input:                hsl(40, 6%, 22%);
-  --color-ring:                 hsl(158, 68%, 37%);
+  /* ─────────────────────────────────────────────────────────────
+     TEXT HIERARCHY
+     ───────────────────────────────────────────────────────────── */
 
-  --color-success:              hsl(142, 70%, 45%);
-  --color-success-foreground:   hsl(0, 0%, 100%);
-  --color-warning:              hsl(38, 78%, 55%);
-  --color-warning-foreground:   hsl(0, 0%, 100%);
-  --color-info:                 hsl(211, 69%, 54%);
-  --color-info-foreground:      hsl(0, 0%, 100%);
+  --color-foreground: #F8FAFC;
+  --color-foreground-muted: #CBD5E1;
+  --color-foreground-subtle: #94A3B8;
 
-  --color-crop:                 hsl(162, 83%, 8%);
-  --color-crop-foreground:      hsl(152, 55%, 88%);
-  --color-livestock:            hsl(33, 88%, 12%);
-  --color-livestock-foreground: hsl(43, 88%, 85%);
-  --color-ledger:               hsl(142, 70%, 15%);
-  --color-ledger-foreground:    hsl(142, 70%, 75%);
-  --color-advisory:             hsl(211, 75%, 15%);
-  --color-advisory-foreground:  hsl(210, 70%, 75%);
+
+  /* ─────────────────────────────────────────────────────────────
+     CARDS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-card: #111827;
+  --color-card-foreground: #F8FAFC;
+  --color-card-border: #263244;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     UI
+     ───────────────────────────────────────────────────────────── */
+
+  --color-muted: #1E293B;
+  --color-muted-foreground: #CBD5E1;
+
+  --color-border: #273449;
+  --color-input: #334155;
+  --color-ring: #F59E0B;              /* Amber -- same as light, stays vivid on dark */
+
+
+  /* ─────────────────────────────────────────────────────────────
+     BRAND — Different Luminance for Dark Mode
+     ───────────────────────────────────────────────────────────── */
+
+  --color-primary: #3B5CCC;             /* Lighter navy — visible */
+  --color-primary-foreground: #FFFFFF;
+
+  --color-accent: #F59E0B;
+  --color-accent-foreground: #111827;
+  --color-accent-subtle: #F59E0B14;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     STATUS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-success: #22C55E;
+  --color-success-foreground: #0A1A0A;
+  --color-success-bg: #14532D;
+
+  --color-warning: #F59E0B;
+  --color-warning-foreground: #1A1A0A;
+  --color-warning-bg: #713F12;
+
+  --color-danger: #EF4444;
+  --color-danger-foreground: #1A0A0A;
+  --color-danger-bg: #7F1D1D;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     DOMAIN COLORS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-flock: #1E1B4B;
+  --color-flock-foreground: #A5B4FC;
+
+  --color-health: #134E4A;
+  --color-health-foreground: #5EEAD4;
+
+  --color-production: #431407;
+  --color-production-foreground: #FDBA74;
+
+  --color-market: #422006;
+  --color-market-foreground: #FDE047;
+
+  --color-finance: #052E16;
+  --color-finance-foreground: #86EFAC;
+
+
+  /* ─────────────────────────────────────────────────────────────
+     GLASS
+     ───────────────────────────────────────────────────────────── */
+
+  --color-glass: rgba(17, 24, 39, 0.72);
+  --color-glass-border: rgba(148, 163, 184, 0.15);
+  --color-glass-shadow: rgba(0, 0, 0, 0.40);
+
+
+  /* ─────────────────────────────────────────────────────────────
+     SHADOWS
+     ───────────────────────────────────────────────────────────── */
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.40);
+  --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --shadow-2xl: 0 30px 70px rgba(0, 0, 0, 0.50);
 }
 
-/* ── 3. Base Styles ─────────────────────────────────────────── */
+
+/* ───────────────────────────────────────────────────────────────
+   REST OF THE FILE — Base, Components, Animations, etc.
+   ─────────────────────────────────────────────────────────────── */
+
+/* ── Base Styles ────────────────────────────────────────────── */
+
 @layer base {
+
   * {
     border-color: var(--color-border);
   }
 
   html {
     font-size: 16px;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    scroll-behavior: smooth;
     scrollbar-gutter: stable;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
 
-  /* Typography */
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
     color: var(--color-foreground);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
   }
 
-  h1 { font-size: 2.25rem; }
-  h2 { font-size: 1.875rem; }
-  h3 { font-size: 1.5rem; }
-  h4 { font-size: 1.25rem; }
+  h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); }
+  h2 { font-size: clamp(2rem, 4vw, 3rem); }
+  h3 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+  h4 { font-size: clamp(1.25rem, 2vw, 1.5rem); }
   h5 { font-size: 1.125rem; }
   h6 { font-size: 1rem; }
 
-  /* Links */
   a {
     color: var(--color-primary);
     text-decoration: none;
@@ -150,40 +340,36 @@
   }
 
   a:hover {
-    text-decoration: underline;
+    color: var(--color-accent);
   }
 
-  /* Form elements */
   button, input, textarea, select {
     font-family: var(--font-sans);
   }
 
-  /* Selection — fixed: use space-separated hsl() for alpha */
   ::selection {
-    background-color: hsl(158 68% 37% / 0.2);
+    background-color: rgba(245, 158, 11, 0.25);
     color: var(--color-foreground);
   }
 
-  /* Focus ring */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--color-background);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 9999px;
+    background: var(--color-muted);
+    border-radius: var(--radius-full);
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -191,154 +377,92 @@
   }
 }
 
-/* ── 4. Keyframes (top-level, outside @layer) ───────────────── */
-/*
-   Defined at top level so they're globally available regardless of
-   cascade layer ordering.
-*/
+
+/* ── Animations ──────────────────────────────────────────────── */
+
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-down {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-/* ── 5. Components ─────────────────────────────────────────── */
-@layer components {
-
-  /* ── 9. shadcn UI Component Styles ────────────────────────── */
-@layer components {
-  /* Tabs */
-  .tabs-list {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-lg);
-    background-color: var(--color-muted);
-    padding: 0.25rem;
-    color: var(--color-muted-foreground);
-  }
-
-  .tabs-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    border-radius: calc(var(--radius-md) - 0.125rem);
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    background-color: transparent;
-    color: var(--color-muted-foreground);
-    box-shadow: none;
-  }
-
-  .tabs-trigger:hover {
-    color: var(--color-foreground);
-  }
-
-  .tabs-trigger[data-state="active"] {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .tabs-trigger:focus-visible {
-    outline: 2px solid var(--color-ring);
-    outline-offset: 2px;
-  }
-
-  .tabs-trigger:disabled {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-
-  .tabs-content {
-    margin-top: 0.5rem;
-    display: block;
-  }
-}
-  /* Domain Badges */
-  .badge-crop {
-    background-color: var(--color-crop);
-    color: var(--color-crop-foreground);
-    border: 1px solid color-mix(in hsl, var(--color-crop), transparent 50%);
-  }
-
-  .badge-livestock {
-    background-color: var(--color-livestock);
-    color: var(--color-livestock-foreground);
-    border: 1px solid color-mix(in hsl, var(--color-livestock), transparent 50%);
-  }
-
-  .badge-ledger {
-    background-color: var(--color-ledger);
-    color: var(--color-ledger-foreground);
-    border: 1px solid color-mix(in hsl, var(--color-ledger), transparent 50%);
-  }
-
-  .badge-advisory {
-    background-color: var(--color-advisory);
-    color: var(--color-advisory-foreground);
-    border: 1px solid color-mix(in hsl, var(--color-advisory), transparent 50%);
-  }
-
-  /* Cards */
-  .card {
-    background-color: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 200ms ease, transform 200ms ease;
-  }
-
-  .card:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  /* Container */
-  .container-custom {
-    width: 100%;
-    max-width: 1280px;
-    margin-inline: auto;
-    padding-inline: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    .container-custom {
-      padding-inline: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container-custom {
-      padding-inline: 2rem;
-    }
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-/* ── 6. Utilities ───────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+
+/* ── Utilities ───────────────────────────────────────────────── */
+
 @layer utilities {
-  /* Text balance */
-  .text-balance {
-    text-wrap: balance;
-  }
 
-  /* Visually hidden (accessibility) */
+  .animate-fade-in { animation: fade-in 0.6s ease forwards; }
+  .animate-fade-up { animation: fade-up 0.7s ease forwards; }
+  .animate-fade-down { animation: fade-down 0.7s ease forwards; }
+  .animate-slide-left { animation: slide-in-left 0.6s ease forwards; }
+  .animate-slide-right { animation: slide-in-right 0.6s ease forwards; }
+  .animate-scale-in { animation: scale-in 0.5s ease forwards; }
+  .animate-float { animation: float 3s ease-in-out infinite; }
+  .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  .animate-ping { animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+  .animation-delay-100 { animation-delay: 0.1s; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-300 { animation-delay: 0.3s; }
+  .animation-delay-400 { animation-delay: 0.4s; }
+  .animation-delay-500 { animation-delay: 0.5s; }
+  .animation-delay-600 { animation-delay: 0.6s; }
+  .animation-delay-700 { animation-delay: 0.7s; }
+  .animation-delay-800 { animation-delay: 0.8s; }
+
+  .animation-fill-forwards { animation-fill-mode: forwards; }
+  .animation-fill-both { animation-fill-mode: both; }
+  .animation-visible { opacity: 0; }
+
+  .text-balance { text-wrap: balance; }
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -351,7 +475,6 @@
     border-width: 0;
   }
 
-  /* Line clamp */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -366,34 +489,158 @@
     overflow: hidden;
   }
 
-  /* Aspect ratios */
-  .aspect-video  { aspect-ratio: 16 / 9; }
+  .aspect-video { aspect-ratio: 16 / 9; }
   .aspect-square { aspect-ratio: 1 / 1; }
-
-  /* Animations */
-  .animate-fade-in {
-    animation: fade-in 200ms ease-out forwards;
-  }
-
-  .animate-fade-in-up {
-    animation: fade-in-up 500ms ease-out forwards;
-  }
-
-  .animate-slide-in-right {
-    animation: slide-in-right 300ms ease-out forwards;
-  }
-
-  .animate-pulse-subtle {
-    animation: pulse-subtle 2s ease-in-out infinite;
-  }
-
-  /* Animation delays */
-  .animation-delay-200 { animation-delay: 200ms; }
-  .animation-delay-400 { animation-delay: 400ms; }
-  .animation-delay-600 { animation-delay: 600ms; }
 }
 
-/* ── 7. Accessibility (Reduced Motion) ─────────────────────── */
+
+/* ── Components ──────────────────────────────────────────────── */
+
+@layer components {
+
+  /* Glass */
+  .glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: 0 8px 32px -8px var(--color-glass-shadow);
+  }
+
+  .glass-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glass-hover:hover {
+    border-color: rgba(245, 158, 11, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 48px -12px var(--color-glass-shadow);
+  }
+
+
+  /* Cards */
+  .card-premium {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+  }
+
+  .card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+  }
+
+
+  /* Gradients */
+  .text-gradient {
+    background: linear-gradient(135deg, #FBBF24, #F59E0B, #D97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-hero {
+    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+
+  /* Status Dot */
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: relative;
+  }
+
+  .status-dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .status-dot.online { background: var(--color-success); }
+  .status-dot.online::after { background: var(--color-success); opacity: 0.3; }
+  .status-dot.warning { background: var(--color-warning); }
+  .status-dot.warning::after { background: var(--color-warning); opacity: 0.3; }
+
+
+  /* Container */
+  .container-custom {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-custom { padding-inline: 2rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .container-custom { padding-inline: 3rem; }
+  }
+
+
+  /* Hero Glows */
+  .hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  .hero-glow-amber {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.15), transparent 70%);
+  }
+
+  .hero-glow-blue {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(23, 37, 84, 0.10), transparent 70%);
+  }
+
+
+  /* Market Section */
+  .market-section {
+    background: var(--color-market-bg);
+    color: var(--color-market-text);
+  }
+
+  .market-card {
+    background: var(--color-market-card-bg);
+    border: 1px solid var(--color-market-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-market-text);
+  }
+
+
+  /* Generic Card */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+
+/* ── Reduced Motion ──────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -403,26 +650,28 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .animate-fade-in,
+  .animate-fade-up,
+  .animate-fade-down,
+  .animate-slide-left,
+  .animate-slide-right,
+  .animate-scale-in,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-shimmer,
+  .animate-ping {
+    animation: none !important;
+  }
 }
 
-/* ── 8. Print Styles ───────────────────────────────────────── */
+
+/* ── Print ───────────────────────────────────────────────────── */
+
 @media print {
   body {
-    background: white;
-    color: black;
-    font-size: 12pt;
+    background: #FFFFFF;
+    color: #000000;
   }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .print-break {
-    page-break-before: always;
-  }
-
-  a {
-    color: black;
-    text-decoration: none;
-  }
+  .no-print { display: none !important; }
 }

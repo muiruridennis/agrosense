@@ -1,7 +1,13 @@
 // app/dashboard/components/owner/OwnerSidebar.tsx
 "use client";
 
-import { AlertTriangle, CalendarCheck2, CheckCircle2, Clock, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarCheck2,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,12 +29,16 @@ interface OwnerSidebarProps {
   feedDaysRemaining: number;
   criticalItems: Array<{ itemName: string }>;
   cashRunwayDays?: number;
-  
+
   // Amber Zone
   pendingTasks: Task[];
   itemsNeedingReorder: Array<{ itemName: string; daysSupply: number }>;
-  diseaseAlerts: Array<{ recommendation?: string; diseaseName: string; severity: string }>;
-  
+  diseaseAlerts: Array<{
+    recommendation?: string;
+    diseaseName: string;
+    severity: string;
+  }>;
+
   // Green Zone
   mortalityRate: number;
   mortalityTarget: number;
@@ -41,7 +51,15 @@ interface OwnerSidebarProps {
 // Side Panel Wrapper
 // ============================================================
 
-function SidePanel({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) {
+function SidePanel({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: any;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="overflow-hidden rounded-xl border bg-card">
       <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2.5">
@@ -70,7 +88,12 @@ function TaskItem({ task }: { task: Task }) {
     <div className="group flex w-full items-start gap-3 border-b border-border/60 px-4 py-2.5 text-left last:border-none">
       <div className="min-w-0 flex-1">
         <p className="text-xs leading-snug text-foreground">{task.text}</p>
-        <p className={cn("mt-0.5 flex items-center gap-1 text-[10px]", urgencyStyles[task.urgency])}>
+        <p
+          className={cn(
+            "mt-0.5 flex items-center gap-1 text-[10px]",
+            urgencyStyles[task.urgency],
+          )}
+        >
           <Clock className="h-2.5 w-2.5 shrink-0" />
           {task.due}
         </p>
@@ -83,7 +106,17 @@ function TaskItem({ task }: { task: Task }) {
 // Progress Row
 // ============================================================
 
-function ProgressRow({ label, valueLabel, pct, color }: { label: string; valueLabel: string; pct: number; color: "success" | "warning" | "destructive" }) {
+function ProgressRow({
+  label,
+  valueLabel,
+  pct,
+  color,
+}: {
+  label: string;
+  valueLabel: string;
+  pct: number;
+  color: "success" | "warning" | "destructive";
+}) {
   const fillColors = {
     success: "bg-success",
     warning: "bg-warning",
@@ -103,7 +136,13 @@ function ProgressRow({ label, valueLabel, pct, color }: { label: string; valueLa
         <span className={cn("font-mono", textColors[color])}>{valueLabel}</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full transition-all", fillColors[color])} style={{ width: `${Math.min(pct, 100)}%` }} />
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            fillColors[color],
+          )}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
       </div>
     </div>
   );
@@ -130,40 +169,39 @@ export function OwnerSidebar({
   activeFlockCount,
   totalBirds,
 }: OwnerSidebarProps) {
-  
   // ============================================================
   // RED ZONE: Build blocking issues
   // ============================================================
-  
+
   const blockingIssues: string[] = [];
-  
+
   urgentAlerts.forEach((alert) => {
     blockingIssues.push(alert.title || alert.diseaseName || "Critical alert");
   });
-  
+
   if (feedDaysRemaining <= 2) {
     blockingIssues.push(`Low feed: ${feedDaysRemaining} day(s) remaining`);
   }
-  
+
   criticalItems?.forEach((item) => {
     blockingIssues.push(`Critical stock: ${item.itemName}`);
   });
-  
+
   if (cashRunwayDays !== undefined && cashRunwayDays <= 7) {
     blockingIssues.push(`Low cash runway: ${cashRunwayDays} days`);
   }
-  
+
   // ============================================================
   // AMBER ZONE: Build action items
   // ============================================================
-  
+
   const actionTasks: Task[] = [];
-  
+
   // Add pending tasks
   pendingTasks.forEach((task) => {
     actionTasks.push(task);
   });
-  
+
   // Add reorder items
   itemsNeedingReorder?.forEach((item, i) => {
     actionTasks.push({
@@ -174,7 +212,7 @@ export function OwnerSidebar({
       completed: false,
     });
   });
-  
+
   // Add disease alerts
   diseaseAlerts?.forEach((alert, i) => {
     actionTasks.push({
@@ -185,21 +223,22 @@ export function OwnerSidebar({
       completed: false,
     });
   });
-  
+
   // ============================================================
   // GREEN ZONE: Calculate metrics
   // ============================================================
-  
+
   const mortalityValue = mortalityRate ?? 1.9;
   const isMortalityHigh = mortalityValue > mortalityTarget;
-  const feedPercentage = feedDaysRemaining <= 2 ? 10 : feedDaysRemaining <= 7 ? 50 : 90;
+  const feedPercentage =
+    feedDaysRemaining <= 2 ? 10 : feedDaysRemaining <= 7 ? 50 : 90;
   const cashPercentage = Math.min((cashScore ?? 0) * 100, 100);
   const isCashHealthy = (cashScore ?? 1) >= 0.5;
-  
+
   // ============================================================
   // RENDER
   // ============================================================
-  
+
   return (
     <div className="space-y-4">
       {/* RED ZONE - Blocking Issues */}
@@ -211,10 +250,17 @@ export function OwnerSidebar({
         ) : (
           <div>
             {blockingIssues.map((issue, idx) => (
-              <div key={idx} className="border-b border-border/60 px-4 py-3 last:border-none">
+              <div
+                key={idx}
+                className="border-b border-border/60 px-4 py-3 last:border-none"
+              >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-[13px] font-medium text-foreground">{issue}</p>
-                  <Badge variant="destructive" className="shrink-0">Blocking</Badge>
+                  <p className="text-[13px] font-medium text-foreground">
+                    {issue}
+                  </p>
+                  <Badge variant="destructive" className="shrink-0">
+                    Blocking
+                  </Badge>
                 </div>
               </div>
             ))}

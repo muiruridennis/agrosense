@@ -18,7 +18,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { FinanceService } from '../finance/finance.service';
 import { InventoryService } from '../inventory/inventory.service';
-import { PoultryService } from '../poultry/poultry.service';
 import { CostCategory } from '../finance/enums/cost-category.enum';
 import { RevenueCategory } from '../finance/enums/revenue-category.enum';
 import type {
@@ -59,7 +58,7 @@ export class IntegrationService {
   constructor(
     private readonly financeService: FinanceService,
     private readonly inventoryService: InventoryService,
-    private readonly poultryService: PoultryService,
+    // private readonly poultryService: PoultryService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════════

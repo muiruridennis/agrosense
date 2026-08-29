@@ -9,7 +9,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Thermometer, Droplets, Egg, Wheat, ShieldAlert, User } from "lucide-react";
+import {
+  Pencil,
+  Thermometer,
+  Droplets,
+  Egg,
+  Wheat,
+  ShieldAlert,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FlockRecord } from "../types";
 
@@ -22,10 +30,10 @@ interface RecordDetailDialogProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  draft:     "bg-muted text-muted-foreground",
+  draft: "bg-muted text-muted-foreground",
   submitted: "bg-info/10 text-info",
-  reviewed:  "bg-success/10 text-success",
-  flagged:   "bg-destructive/10 text-destructive",
+  reviewed: "bg-success/10 text-success",
+  flagged: "bg-destructive/10 text-destructive",
 };
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
@@ -54,17 +62,20 @@ export function RecordDetailDialog({
         <DialogHeader>
           <div className="flex items-center justify-evenly gap-3">
             <DialogTitle className="flex items-center gap-2">
-              Record · {new Date(record.recordDate).toLocaleDateString(undefined, {
+              Record ·{" "}
+              {new Date(record.recordDate).toLocaleDateString(undefined, {
                 weekday: "short",
                 day: "2-digit",
                 month: "short",
                 year: "numeric",
               })}
             </DialogTitle>
-            <span className={cn(
-              "rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-              STATUS_STYLES[record.status] ?? STATUS_STYLES.draft,
-            )}>
+            <span
+              className={cn(
+                "rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                STATUS_STYLES[record.status] ?? STATUS_STYLES.draft,
+              )}
+            >
               {record.status}
             </span>
           </div>
@@ -74,30 +85,52 @@ export function RecordDetailDialog({
           {/* Production */}
           <section>
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              {flockType === "layers" ? <Egg className="h-3.5 w-3.5" /> : <ShieldAlert className="h-3.5 w-3.5" />}
+              {flockType === "layers" ? (
+                <Egg className="h-3.5 w-3.5" />
+              ) : (
+                <ShieldAlert className="h-3.5 w-3.5" />
+              )}
               Production
             </p>
             <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/20 p-3">
               {flockType === "layers" ? (
                 <>
-                  <Field label="Morning eggs" value={record.morningEggs ?? "—"} />
-                  <Field label="Evening eggs" value={record.eveningEggs ?? "—"} />
+                  <Field
+                    label="Morning eggs"
+                    value={record.morningEggs ?? "—"}
+                  />
+                  <Field
+                    label="Evening eggs"
+                    value={record.eveningEggs ?? "—"}
+                  />
                   <Field label="Broken eggs" value={record.brokenEggs ?? "—"} />
                   <Field label="Dirty eggs" value={record.dirtyEggs ?? "—"} />
                   <Field
                     label="Production rate"
-                    value={record.productionRatePercent != null ? `${record.productionRatePercent}%` : "—"}
+                    value={
+                      record.productionRatePercent != null
+                        ? `${record.productionRatePercent}%`
+                        : "—"
+                    }
                   />
                   <Field
                     label="Egg revenue"
-                    value={record.eggRevenue != null ? `KES ${record.eggRevenue.toLocaleString()}` : "—"}
+                    value={
+                      record.eggRevenue != null
+                        ? `KES ${record.eggRevenue.toLocaleString()}`
+                        : "—"
+                    }
                   />
                 </>
               ) : (
                 <>
                   <Field
                     label="Avg body weight"
-                    value={record.avgBodyWeightKg != null ? `${record.avgBodyWeightKg} kg` : "—"}
+                    value={
+                      record.avgBodyWeightKg != null
+                        ? `${record.avgBodyWeightKg} kg`
+                        : "—"
+                    }
                   />
                   <Field label="Sample size" value={record.sampleSize ?? "—"} />
                   <Field
@@ -106,7 +139,11 @@ export function RecordDetailDialog({
                   />
                   <Field
                     label="Uniformity"
-                    value={record.uniformityPercent != null ? `${record.uniformityPercent}%` : "—"}
+                    value={
+                      record.uniformityPercent != null
+                        ? `${record.uniformityPercent}%`
+                        : "—"
+                    }
                   />
                 </>
               )}
@@ -125,12 +162,20 @@ export function RecordDetailDialog({
               <Field label="Sick birds" value={record.sickBirds ?? 0} />
               <Field
                 label="Health risk score"
-                value={record.healthRiskScore != null ? record.healthRiskScore.toFixed(1) : "—"}
+                value={
+                  record.healthRiskScore != null
+                    ? record.healthRiskScore.toFixed(1)
+                    : "—"
+                }
               />
               <Field label="Medication" value={record.medication || "None"} />
               <Field
                 label="Mortality cost"
-                value={record.mortalityCost != null ? `KES ${record.mortalityCost.toLocaleString()}` : "—"}
+                value={
+                  record.mortalityCost != null
+                    ? `KES ${record.mortalityCost.toLocaleString()}`
+                    : "—"
+                }
               />
             </div>
           </section>
@@ -144,29 +189,50 @@ export function RecordDetailDialog({
             <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/20 p-3">
               <Field
                 label="Feed consumed"
-                value={record.feedConsumedKg != null ? `${record.feedConsumedKg} kg` : "—"}
+                value={
+                  record.feedConsumedKg != null
+                    ? `${record.feedConsumedKg} kg`
+                    : "—"
+                }
               />
               <Field label="Feed type" value={record.feedType || "—"} />
               <Field
                 label="Feed cost"
-                value={record.feedCost != null ? `KES ${record.feedCost.toLocaleString()}` : "—"}
+                value={
+                  record.feedCost != null
+                    ? `KES ${record.feedCost.toLocaleString()}`
+                    : "—"
+                }
               />
               <Field
                 label="Water consumed"
-                value={record.waterConsumedLitres != null ? `${record.waterConsumedLitres} L` : "—"}
+                value={
+                  record.waterConsumedLitres != null
+                    ? `${record.waterConsumedLitres} L`
+                    : "—"
+                }
               />
               <Field
                 label="Temperature"
-                value={record.temperatureCelsius != null ? `${record.temperatureCelsius}°C` : "—"}
+                value={
+                  record.temperatureCelsius != null
+                    ? `${record.temperatureCelsius}°C`
+                    : "—"
+                }
               />
-              <Field label="Live birds after" value={record.liveBirdsAfterRecord ?? "—"} />
+              <Field
+                label="Live birds after"
+                value={record.liveBirdsAfterRecord ?? "—"}
+              />
             </div>
           </section>
 
           {/* Remarks */}
           {record.remarks && (
             <section>
-              <p className="mb-2 text-xs font-semibold text-muted-foreground">Remarks</p>
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                Remarks
+              </p>
               <p className="rounded-lg border bg-muted/20 p-3 text-sm text-foreground">
                 {record.remarks}
               </p>
@@ -176,7 +242,9 @@ export function RecordDetailDialog({
           {/* Review note, if flagged or reviewed */}
           {record.reviewNote && (
             <section>
-              <p className="mb-2 text-xs font-semibold text-muted-foreground">Review note</p>
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                Review note
+              </p>
               <p className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                 {record.reviewNote}
               </p>

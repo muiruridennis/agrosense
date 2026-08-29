@@ -2,7 +2,16 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, TrendingUp, TrendingDown, Egg, Target, Calendar, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Egg,
+  Target,
+  Calendar,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -20,18 +29,27 @@ interface FlockCardProps {
   onDelete?: () => void;
 }
 
-export function FlockCard({ flock, farmId, houseName, onEdit, onDelete }: FlockCardProps) {
+export function FlockCard({
+  flock,
+  farmId,
+  houseName,
+  onEdit,
+  onDelete,
+}: FlockCardProps) {
   const router = useRouter();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const mortalityRate = ((flock.initialCount - flock.currentCount) / flock.initialCount) * 100;
+  const mortalityRate =
+    ((flock.initialCount - flock.currentCount) / flock.initialCount) * 100;
   const expectedMortality = flock.expectedMortalityPercent || 5;
   const isMortalityHigh = mortalityRate > expectedMortality * 1.2;
 
   const placementDate = new Date(flock.placementDate);
   const today = new Date();
-  const daysInProduction = Math.floor((today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysInProduction = Math.floor(
+    (today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const targetDays = flock.targetDays || 42;
   const daysRemaining = Math.max(0, targetDays - daysInProduction);
   const progressPercent = Math.min(100, (daysInProduction / targetDays) * 100);
@@ -55,7 +73,9 @@ export function FlockCard({ flock, farmId, houseName, onEdit, onDelete }: FlockC
     <>
       <div
         className="group cursor-pointer rounded-lg border bg-card p-3 transition-all hover:border-primary/30 hover:shadow-sm"
-         onClick={() => router.push(`/dashboard/farms/${farmId}/poultry/flocks/${flock.id}`)}
+        onClick={() =>
+          router.push(`/dashboard/farms/${farmId}/poultry/flocks/${flock.id}`)
+        }
         // onClick={() => setDetailsOpen(true)}
       >
         {/* Header with Action Buttons */}
@@ -73,16 +93,20 @@ export function FlockCard({ flock, farmId, houseName, onEdit, onDelete }: FlockC
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span>{flock.currentCount.toLocaleString()} birds</span>
               <span>•</span>
-              <span>Placed: {new Date(flock.placementDate).toLocaleDateString()}</span>
+              <span>
+                Placed: {new Date(flock.placementDate).toLocaleDateString()}
+              </span>
               {flock.type === "broilers" && (
                 <>
                   <span>•</span>
-                  <span>Day {daysInProduction} / {targetDays}</span>
+                  <span>
+                    Day {daysInProduction} / {targetDays}
+                  </span>
                 </>
               )}
             </div>
           </div>
-          
+
           {/* Action Buttons - appear on hover */}
           <div className="flex items-center gap-1 shrink-0">
             {onEdit && (
@@ -146,7 +170,8 @@ export function FlockCard({ flock, farmId, houseName, onEdit, onDelete }: FlockC
         {isMortalityHigh && flock.status === "active" && (
           <div className="mt-2 flex items-center gap-1.5 rounded-md bg-rose-50 p-1.5 text-[10px] text-rose-700">
             <TrendingDown className="h-3 w-3" />
-            Mortality rate {mortalityRate.toFixed(1)}% exceeds target {expectedMortality}%
+            Mortality rate {mortalityRate.toFixed(1)}% exceeds target{" "}
+            {expectedMortality}%
           </div>
         )}
       </div>

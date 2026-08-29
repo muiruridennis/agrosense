@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import type { FlockRecord } from "../types";
+import type { FlockRecord } from "@/types";
+import { useFarmRole } from "@/providers/FarmRoleContext";
 
 interface DeleteRecordDialogProps {
   open: boolean;
@@ -30,6 +31,8 @@ export function DeleteRecordDialog({
   onSuccess,
   isPending = false,
 }: DeleteRecordDialogProps) {
+  const { role } = useFarmRole();
+  const isOwner = role === "owner";
   const handleDelete = () => {
     if (onDeleteConfirm) {
       onDeleteConfirm();
@@ -40,7 +43,7 @@ export function DeleteRecordDialog({
 
   if (!record) return null;
 
-  const canDelete = record.status === "draft";
+  const canDelete = isOwner || record.status === "draft";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,13 +64,22 @@ export function DeleteRecordDialog({
                   {new Date(record.recordDate).toLocaleDateString()}
                 </span>
                 .
+                {record.status !== "draft" && isOwner && (
+                  <span className="block mt-2 text-amber-600">
+                    ⚠️ This record is{" "}
+                    <span className="font-semibold">{record.status}</span>.
+                    Deleting it will remove it from the audit trail.
+                  </span>
+                )}
               </>
             ) : (
               <>
                 <span className="font-semibold text-destructive">
                   Only draft records can be deleted.
                 </span>{" "}
-                This record is <span className="font-semibold">{record.status}</span> and cannot be removed.
+                This record is{" "}
+                <span className="font-semibold">{record.status}</span> and
+                cannot be removed.
               </>
             )}
           </DialogDescription>

@@ -1,151 +1,169 @@
-'use client';
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, Play, CheckCircle2, Leaf, Camera, Bell, TrendingUp, Syringe, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+const FALLBACK_IMAGE = "/hero-poultry-placeholder.png";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  heroImageSrc?: string;
+}
+
+export function HeroSection({
+  heroImageSrc = FALLBACK_IMAGE,
+}: HeroSectionProps) {
   return (
-    <section className="relative min-h-[calc(100vh-80px)] flex items-center overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 via-background to-secondary-50/50 dark:from-primary-950/20 dark:via-background" />
-      
-      {/* Decorative elements */}
-      <div className="absolute top-1/4 -left-24 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-secondary-500/5 rounded-full blur-3xl" />
+    <section className="relative min-h-screen overflow-hidden bg-[#070B14]">
+      {/* ========================================
+          BACKGROUND IMAGE
+      ======================================== */}
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          
-          {/* Left Column - Text Content */}
-          <div className="text-center lg:text-left">
-            {/* Trust badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-              </span>
-              <span className="text-sm font-medium text-primary">
-                Trusted by 10,000+ farmers
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={heroImageSrc}
+          alt="Healthy hens in a modern poultry farm"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+
+        {/* Focused readability gradient */}
+        <div
+          className="absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-[#070B14]/85 via-[#070B14]/55 to-transparent"
+          aria-hidden="true"
+        />
+
+        {/* Very subtle overall contrast */}
+        <div className="absolute inset-0 bg-[#070B14]/10" aria-hidden="true" />
+      </div>
+
+      {/* ========================================
+          BACKGROUND ATMOSPHERE
+      ======================================== */}
+
+      <div
+        className="pointer-events-none absolute -left-1/4 top-1/3 z-10 h-[700px] w-[700px] -translate-y-1/2 rounded-full bg-amber-400/[0.04] blur-3xl"
+        aria-hidden="true"
+      />
+
+      <div
+        className="pointer-events-none absolute -right-1/4 bottom-0 z-10 h-[600px] w-[600px] rounded-full bg-blue-500/[0.03] blur-3xl"
+        aria-hidden="true"
+      />
+
+      {/* ========================================
+          CONTENT
+      ======================================== */}
+
+      <div className="container-custom relative z-20 flex min-h-screen items-center">
+        <div className="grid w-full items-center py-28 lg:min-h-screen lg:grid-cols-2 lg:py-20">
+          {/* LEFT — CONTENT */}
+
+          <div className="max-w-2xl">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-amber-400/20 bg-[#070B14]/40 px-4 py-2 backdrop-blur-md">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-emerald-400"
+                aria-hidden="true"
+              />
+
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-amber-400/90">
+                Built for poultry farmers
               </span>
             </div>
 
-            {/* Headline - Wider positioning */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6 tracking-tight">
-              Make smarter decisions
-              <span className="text-primary block mt-2">across your entire farm.</span>
+            {/* Headline */}
+            <h1 className="mt-8 max-w-2xl text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Run your poultry farm{" "}
+              <span className="text-gradient-hero">with confidence.</span>
             </h1>
 
-            {/* Subheadline - Mentions multiple features */}
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0">
-              Track crops and livestock. Catch diseases early. Get weather alerts. 
-              Know your real profit. All in one place.
+            {/* Subheadline */}
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
+              Track your flock, production, health, and market prices in one
+              place — so you always know what&apos;s happening and what to do
+              next.
             </p>
 
-            {/* CTA Buttons - Fixed mismatch */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-              <Button asChild size="lg" variant="secondary" className="gap-2 px-8">
-                <Link href="/auth/register">
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
+            {/* CTAs */}
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="group h-14 rounded-2xl bg-amber-400 px-7 font-semibold text-[#070B14] shadow-lg shadow-amber-400/20 transition-all duration-300 hover:bg-amber-500 hover:text-white hover:shadow-amber-500/40"
+              >
+                <Link href="/register">
+                  Get started free
+                  <ArrowRight
+                    className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="gap-2 px-8">
-                <Link href="/demo">
-                  <Play className="w-4 h-4" />
-                  See How It Works
-                </Link>
+
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-14 rounded-2xl border-white/40 bg-white/[0.08] px-7 text-white backdrop-blur-md transition-all duration-300 hover:border-white/60 hover:bg-white/[0.18]"
+              >
+                <Link href="/market">Explore poultry market</Link>
               </Button>
             </div>
 
-            {/* Trust indicators - Keep these */}
-            <div className="flex flex-wrap gap-6 justify-center lg:justify-start">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success" />
-                <span className="text-sm text-muted-foreground">14-day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success" />
-                <span className="text-sm text-muted-foreground">No credit card</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success" />
-                <span className="text-sm text-muted-foreground">Cancel anytime</span>
-              </div>
+            {/* Trust */}
+            <div className="mt-6 flex items-center">
+              <span className="flex items-center gap-2 text-xs text-white/60">
+                <ShieldCheck
+                  className="h-4 w-4 text-emerald-400"
+                  aria-hidden="true"
+                />
+                No credit card required
+              </span>
             </div>
           </div>
 
-          {/* Right Column - Image with Data Overlay (Keep as is - shows multiple features) */}
-          <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border bg-card">
-              <div className="aspect-4/3 relative bg-gradient-to-br from-primary-900/20 to-secondary-900/20">
-                <Image
-                  src="/hero2.jpg"
-                  alt="Farm management dashboard preview"
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              </div>
+          {/* RIGHT — intentionally empty */}
 
-              {/* Card 1 - Disease Detection (Crops) */}
-              <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[200px] animate-slide-in-right">
-                <div className="flex items-center gap-2 mb-1">
-                  <Camera className="w-3 h-3 text-primary" />
-                  <span className="text-xs font-semibold text-primary">Crop Health</span>
-                </div>
-                <p className="text-sm font-semibold">Late Blight Detected</p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-muted-foreground">Confidence</span>
-                  <span className="text-sm font-bold text-success">96%</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-1 mt-1">
-                  <div className="bg-success h-1 rounded-full" style={{ width: '96%' }} />
-                </div>
-              </div>
+          <div className="hidden lg:block" />
+        </div>
+      </div>
 
-              {/* Card 2 - Weather Alert (Shows advisory feature) */}
-              <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[180px] animate-fade-in-up">
-                <div className="flex items-center gap-2 mb-1">
-                  <Bell className="w-3 h-3 text-yellow-500" />
-                  <span className="text-xs font-semibold text-yellow-500">Weather Alert</span>
-                </div>
-                <p className="text-sm font-semibold">Heavy rain expected</p>
-                <p className="text-xs text-muted-foreground">Tomorrow • 15-20mm</p>
-              </div>
+      {/* ========================================
+          MARKET STRIP
+      ======================================== */}
 
-              {/* Card 3 - Yield Forecast (Shows analytics) */}
-              <div className="absolute bottom-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border max-w-[170px] animate-fade-in-up animation-delay-200">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-3 h-3 text-accent" />
-                  <span className="text-xs font-semibold text-accent">Yield Forecast</span>
-                </div>
-                <p className="text-lg font-bold">+32%</p>
-                <p className="text-xs text-muted-foreground">vs. last season</p>
-              </div>
+      <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 bg-[#070B14]/70 backdrop-blur-md">
+        <div className="container-custom py-4">
+          <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <div className="flex items-center gap-3 text-xs text-white/80">
+              <span className="font-medium uppercase tracking-wider text-white/80">
+                Poultry market intelligence
+              </span>
+
+              <span className="hidden h-3 w-px bg-white/15 sm:block" />
+
+              <span className="hidden sm:inline">
+                Track current prices and market trends
+              </span>
             </div>
 
-            {/* Stats bar - Shows platform benefits */}
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">98%</div>
-                <div className="text-xs text-muted-foreground">Detection accuracy</div>
-              </div>
-              <div className="text-center border-x border-border">
-                <div className="text-2xl font-bold text-primary">40%</div>
-                <div className="text-xs text-muted-foreground">Avg. yield increase</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">24/7</div>
-                <div className="text-xs text-muted-foreground">Expert support</div>
-              </div>
-            </div>
+            <Link
+              href="/market"
+              className="group inline-flex items-center gap-1.5 text-xs font-medium text-amber-400 transition-colors hover:text-amber-300"
+            >
+              View poultry market
+              <ArrowRight
+                className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </Link>
           </div>
         </div>
       </div>
     </section>
   );
 }
+
+export default HeroSection;

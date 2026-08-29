@@ -3,7 +3,15 @@
 
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle2, Egg, Target, Wheat, Droplets, Thermometer } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Egg,
+  Target,
+  Wheat,
+  Droplets,
+  Thermometer,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Flock } from "../types";
 
@@ -14,7 +22,9 @@ interface FlockStatusCardsProps {
 export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
   const placementDate = new Date(flock.placementDate);
   const today = new Date();
-  const daysInProduction = Math.floor((today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysInProduction = Math.floor(
+    (today.getTime() - placementDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const targetDays = flock.targetDays || 42;
   const progressPercent = Math.min(100, (daysInProduction / targetDays) * 100);
 
@@ -35,26 +45,42 @@ export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
             {isMortalityGood ? (
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             ) : (
-              <AlertCircle className={cn("h-4 w-4", isHighMortality ? "text-rose-500" : "text-amber-500")} />
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4",
+                  isHighMortality ? "text-rose-500" : "text-amber-500",
+                )}
+              />
             )}
             <span className="text-sm font-medium">Mortality Rate</span>
           </div>
-          <span className={cn(
-            "text-sm font-semibold",
-            isMortalityGood ? "text-emerald-600" : isHighMortality ? "text-rose-600" : "text-amber-600"
-          )}>
+          <span
+            className={cn(
+              "text-sm font-semibold",
+              isMortalityGood
+                ? "text-emerald-600"
+                : isHighMortality
+                  ? "text-rose-600"
+                  : "text-amber-600",
+            )}
+          >
             {mortalityRate.toFixed(1)}% / {expectedMortality}%
           </span>
         </div>
-        <Progress 
-          value={Math.min(100, (mortalityRate / expectedMortality) * 100)} 
+        <Progress
+          value={Math.min(100, (mortalityRate / expectedMortality) * 100)}
           className={cn(
             "h-2",
-            isMortalityGood ? "bg-emerald-100" : isHighMortality ? "bg-rose-100" : "bg-amber-100"
+            isMortalityGood
+              ? "bg-emerald-100"
+              : isHighMortality
+                ? "bg-rose-100"
+                : "bg-amber-100",
           )}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          {mortalityCount} birds lost ({flock.initialCount - flock.currentCount} total)
+          {mortalityCount} birds lost ({flock.initialCount - flock.currentCount}{" "}
+          total)
         </p>
         {!isMortalityGood && (
           <p className="text-xs text-amber-600 mt-1">
@@ -71,7 +97,9 @@ export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
               <Target className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Production Progress</span>
             </div>
-            <span className="text-sm font-semibold">{Math.round(progressPercent)}%</span>
+            <span className="text-sm font-semibold">
+              {Math.round(progressPercent)}%
+            </span>
           </div>
           <Progress value={progressPercent} className="h-2" />
           <div className="flex justify-between text-xs text-muted-foreground mt-1.5">
@@ -92,7 +120,9 @@ export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
               <Egg className="h-4 w-4 text-amber-500" />
               <span className="text-sm font-medium">Egg Production</span>
             </div>
-            <span className="text-sm font-semibold">Week {flock.productionStartWeek}</span>
+            <span className="text-sm font-semibold">
+              Week {flock.productionStartWeek}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
             Production expected to start at week {flock.productionStartWeek}
@@ -112,7 +142,9 @@ export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
             <Wheat className="h-4 w-4 text-amber-500" />
             <span className="text-sm font-medium">Feed Consumption</span>
           </div>
-          <span className="text-sm font-semibold">{flock.feedCostTotal.toLocaleString()} KES</span>
+          <span className="text-sm font-semibold">
+            {flock.feedCostTotal.toLocaleString()} KES
+          </span>
         </div>
         <p className="text-xs text-muted-foreground">
           Total feed cost incurred to date
@@ -127,7 +159,9 @@ export function FlockStatusCards({ flock }: FlockStatusCardsProps) {
               <Droplets className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Expected Daily Feed</span>
             </div>
-            <span className="text-sm font-semibold">{flock.expectedDailyFeedPerBirdGrams} g/bird</span>
+            <span className="text-sm font-semibold">
+              {flock.expectedDailyFeedPerBirdGrams} g/bird
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
             Industry benchmark for this breed

@@ -179,6 +179,30 @@ function unwrap<T>(response: any): T {
   return response as T;
 }
 
+// Safely convert various timestamp representations to an ISO string.
+function toIsoString(value: any): string {
+  if (value == null) return new Date().toISOString();
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "number") return new Date(value).toISOString();
+  if (typeof value.toDate === "function") {
+    try {
+      const d = value.toDate();
+      if (d instanceof Date) return d.toISOString();
+    } catch (e) {
+      // fallthrough to next handlers
+    }
+  }
+  // Firestore-like timestamp { seconds, nanoseconds }
+  if (typeof value.seconds === "number") {
+    const ms =
+      value.seconds * 1000 +
+      (value.nanoseconds ? Math.floor(value.nanoseconds / 1e6) : 0);
+    return new Date(ms).toISOString();
+  }
+  return new Date().toISOString();
+}
+
 // Operational enterprise summaries for dashboard
 export interface PoultryOperationalData {
   status: "healthy" | "warning" | "critical";
@@ -807,10 +831,7 @@ export function useDashboardDataIntegrated(farmId: string | undefined) {
               : "low",
         hostType: alert.hostType,
         hostTarget: alert.hostTarget || "Farm",
-        triggeredAt:
-          typeof alert.triggeredAt === "string"
-            ? alert.triggeredAt
-            : alert.triggeredAt?.toISOString() || new Date().toISOString(),
+        triggeredAt: toIsoString(alert.triggeredAt),
         isRead: alert.isRead,
       }),
     );
@@ -845,10 +866,7 @@ export function useDashboardDataIntegrated(farmId: string | undefined) {
             "Inspect inventory and replenish stock if required.",
           actionHref: "/dashboard/inventory",
           actionLabel: "Review stock",
-          timestamp:
-            typeof item.createdAt === "string"
-              ? item.createdAt
-              : item.createdAt?.toISOString() || new Date().toISOString(),
+          timestamp: toIsoString(item.createdAt),
         })),
     ];
 

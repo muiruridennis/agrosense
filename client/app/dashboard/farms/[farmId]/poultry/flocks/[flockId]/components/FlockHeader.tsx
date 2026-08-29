@@ -40,11 +40,15 @@ export function FlockHeader({ flock, farmId }: FlockHeaderProps) {
             <h1 className="text-2xl font-semibold tracking-tight">
               {flock.breed}
             </h1>
-            <Badge className={cn(
-              "text-[10px] capitalize",
-              flock.status === "active" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-              flock.status === "closed" && "bg-gray-100 text-gray-700 dark:bg-gray-800/30 dark:text-gray-400",
-            )}>
+            <Badge
+              className={cn(
+                "text-[10px] capitalize",
+                flock.status === "active" &&
+                  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                flock.status === "closed" &&
+                  "bg-gray-100 text-gray-700 dark:bg-gray-800/30 dark:text-gray-400",
+              )}
+            >
               {flock.status}
             </Badge>
             <Badge variant="outline" className="text-[10px] capitalize">
@@ -52,7 +56,8 @@ export function FlockHeader({ flock, farmId }: FlockHeaderProps) {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {flock.type.charAt(0).toUpperCase() + flock.type.slice(1)} · Placed {new Date(flock.placementDate).toLocaleDateString()}
+            {flock.type.charAt(0).toUpperCase() + flock.type.slice(1)} · Placed{" "}
+            {new Date(flock.placementDate).toLocaleDateString()}
           </p>
         </div>
       </div>
@@ -65,7 +70,13 @@ export function FlockHeader({ flock, farmId }: FlockHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => router.push(`/dashboard/farms/${farmId}/poultry/flocks/${flock.id}/edit`)}>
+          <DropdownMenuItem
+            onClick={() =>
+              router.push(
+                `/dashboard/farms/${farmId}/poultry/flocks/${flock.id}/edit`,
+              )
+            }
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit Flock
           </DropdownMenuItem>

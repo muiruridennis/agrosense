@@ -2,15 +2,15 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
+import {
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
   Lightbulb,
   ArrowRight,
   Crown,
   Shield,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,14 +22,13 @@ interface OperationalIntelligenceProps {
   inventory: any;
 }
 
-export function OperationalIntelligence({ 
-  poultry, 
-  dairy, 
-  crops, 
-  finance, 
-  inventory 
+export function OperationalIntelligence({
+  poultry,
+  dairy,
+  crops,
+  finance,
+  inventory,
 }: OperationalIntelligenceProps) {
-  
   // Calculate insights based on data
   const insights = {
     topPerformer: {
@@ -43,7 +42,8 @@ export function OperationalIntelligence({
     biggestRisk: {
       name: "Feed Costs",
       metric: "↑15% this month",
-      insight: "Feed costs are rising faster than revenue. Bulk purchasing could save 10-15%.",
+      insight:
+        "Feed costs are rising faster than revenue. Bulk purchasing could save 10-15%.",
       action: "Review Suppliers",
       icon: TrendingDown,
       color: "rose",
@@ -51,7 +51,8 @@ export function OperationalIntelligence({
     opportunity: {
       name: "Dairy Margin",
       metric: "78% vs 97%",
-      insight: "Dairy margin is 19% below poultry. Optimize feeding schedule to improve.",
+      insight:
+        "Dairy margin is 19% below poultry. Optimize feeding schedule to improve.",
       action: "View Recommendations",
       icon: Lightbulb,
       color: "amber",
@@ -72,13 +73,20 @@ export function OperationalIntelligence({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-primary">Operational Intelligence</h3>
-                <Badge variant="outline" className="text-[10px]">AI-Powered</Badge>
+                <h3 className="text-sm font-semibold text-primary">
+                  Operational Intelligence
+                </h3>
+                <Badge variant="outline" className="text-[10px]">
+                  AI-Powered
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                Your poultry enterprise is outperforming all others with a <strong className="text-primary">97% profit margin</strong>. 
-                Feed costs have increased 15% this month - consider bulk purchasing to protect margins.
-                {hasInventoryAlert && ` ${inventory.lowStock} inventory items need reordering.`}
+                Your poultry enterprise is outperforming all others with a{" "}
+                <strong className="text-primary">97% profit margin</strong>.
+                Feed costs have increased 15% this month - consider bulk
+                purchasing to protect margins.
+                {hasInventoryAlert &&
+                  ` ${inventory.lowStock} inventory items need reordering.`}
               </p>
               <button className="mt-2 text-xs text-primary hover:underline flex items-center gap-1">
                 View detailed analysis
@@ -119,19 +127,25 @@ export function OperationalIntelligence({
           {hasHealthAlert && (
             <div className="flex items-center gap-2 rounded-full bg-rose-50 dark:bg-rose-950/30 px-3 py-1.5">
               <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
-              <span className="text-xs font-medium">Health alerts: {poultry?.alerts + dairy?.alerts}</span>
+              <span className="text-xs font-medium">
+                Health alerts: {poultry?.alerts + dairy?.alerts}
+              </span>
             </div>
           )}
           {hasInventoryAlert && (
             <div className="flex items-center gap-2 rounded-full bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5">
               <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-xs font-medium">Low stock: {inventory.lowStock} items</span>
+              <span className="text-xs font-medium">
+                Low stock: {inventory.lowStock} items
+              </span>
             </div>
           )}
           {finance?.totalCosts > finance?.totalRevenue * 0.7 && (
             <div className="flex items-center gap-2 rounded-full bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5">
               <TrendingDown className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-xs font-medium">Costs are high relative to revenue</span>
+              <span className="text-xs font-medium">
+                Costs are high relative to revenue
+              </span>
             </div>
           )}
         </div>
@@ -151,7 +165,16 @@ interface InsightCardProps {
   badgeColor: string;
 }
 
-function InsightCard({ name, metric, insight, action, icon: Icon, color, badge, badgeColor }: InsightCardProps) {
+function InsightCard({
+  name,
+  metric,
+  insight,
+  action,
+  icon: Icon,
+  color,
+  badge,
+  badgeColor,
+}: InsightCardProps) {
   const colorClasses = {
     emerald: "border-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/20",
     rose: "border-rose-200 bg-rose-50/30 dark:bg-rose-950/20",
@@ -174,21 +197,36 @@ function InsightCard({ name, metric, insight, action, icon: Icon, color, badge, 
   };
 
   return (
-    <Card className={cn("overflow-hidden border-l-4", colorClasses[color as keyof typeof colorClasses])}>
+    <Card
+      className={cn(
+        "overflow-hidden border-l-4",
+        colorClasses[color as keyof typeof colorClasses],
+      )}
+    >
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Icon className={cn("h-4 w-4", iconColors[color as keyof typeof iconColors])} />
+            <Icon
+              className={cn(
+                "h-4 w-4",
+                iconColors[color as keyof typeof iconColors],
+              )}
+            />
             <span className="text-sm font-medium">{name}</span>
           </div>
-          <Badge className={cn("text-[10px]", badgeClasses[badgeColor as keyof typeof badgeClasses])}>
+          <Badge
+            className={cn(
+              "text-[10px]",
+              badgeClasses[badgeColor as keyof typeof badgeClasses],
+            )}
+          >
             {badge}
           </Badge>
         </div>
-        
+
         <p className="text-2xl font-bold mb-1">{metric}</p>
         <p className="text-xs text-muted-foreground mb-3">{insight}</p>
-        
+
         <button className="text-xs font-medium hover:underline flex items-center gap-1">
           {action}
           <ArrowRight className="h-3 w-3" />

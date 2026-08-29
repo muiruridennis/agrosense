@@ -97,7 +97,6 @@ export class InventoryService {
   ): Promise<StockItem> {
     const item = this.itemRepo.create({
       ...dto,
-      farmId,
     });
 
     return this.itemRepo.save(item);
@@ -130,7 +129,7 @@ export class InventoryService {
     dto: UpdateStockItemDto,
   ): Promise<StockItem> {
     const item = await this.itemRepo.findOne({
-      where: { id: itemId, farmId },
+      where: { id: itemId },
     });
 
     if (!item) {
@@ -155,7 +154,7 @@ export class InventoryService {
     dto: CreateStockPurchaseDto,
   ): Promise<StockPurchase> {
     const item = await this.itemRepo.findOne({
-      where: { id: dto.itemId, farmId },
+      where: { id: dto.itemId },
     });
     if (!item) {
       throw new NotFoundException(`Stock item not found`);
@@ -222,7 +221,7 @@ export class InventoryService {
   ): Promise<StockConsumption> {
     // Verify item exists
     const item = await this.itemRepo.findOne({
-      where: { id: dto.itemId, farmId },
+      where: { id: dto.itemId },
     });
     if (!item) {
       throw new NotFoundException(`Stock item not found`);
@@ -276,7 +275,7 @@ export class InventoryService {
     // Don't verify access here (called from internal services)
 
     const item = await this.itemRepo.findOne({
-      where: { id: itemId, farmId },
+      where: { id: itemId },
     });
     if (!item) {
       return null; // Item not tracked in inventory, skip
@@ -334,7 +333,7 @@ export class InventoryService {
   ): Promise<StockAdjustment> {
     // Verify item exists
     const item = await this.itemRepo.findOne({
-      where: { id: dto.itemId, farmId },
+      where: { id: dto.itemId,  },
     });
     if (!item) {
       throw new NotFoundException(`Stock item not found`);
@@ -421,7 +420,7 @@ export class InventoryService {
 
     // Get item for threshold info
     const item = await this.itemRepo.findOne({
-      where: { id: itemId, farmId },
+      where: { id: itemId },
     });
     if (!item) {
       throw new NotFoundException(`Stock item not found`);

@@ -2,7 +2,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 
 interface KpiData {
   label: string;
@@ -48,12 +53,14 @@ export function FarmKpiStrip({ kpis }: FarmKpiStripProps) {
             <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
               <span className="text-[11px] text-black">{kpi.sub}</span>
               {kpi.delta && (
-                <div className={cn(
-                  "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                  kpi.delta.positive 
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" 
-                    : "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400",
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    kpi.delta.positive
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                      : "bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400",
+                  )}
+                >
                   {kpi.delta.positive ? (
                     <ArrowUpRight className="h-3 w-3" />
                   ) : (
