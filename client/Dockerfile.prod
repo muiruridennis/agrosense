@@ -4,6 +4,16 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+
+# Render auto-injects the service's env vars as Docker build args, but
+# only variables explicitly declared with ARG (and re-exported with ENV)
+# actually become available to `next build`. NEXT_PUBLIC_* values are
+# baked into the client bundle at build time — without this, the build
+# never sees the real value and falls back to whatever default is coded
+# (which is how this ended up calling localhost:3001 in production).
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build
 
 # ---- runtime ----
