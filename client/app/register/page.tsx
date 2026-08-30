@@ -1,3 +1,4 @@
+// src/app/(auth)/register/page.tsx
 "use client";
 
 import { useState, useTransition } from "react";
@@ -26,12 +27,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, ApiError } from "@/lib/api/client";
 import {
   RegisterFormData,
   registerSchema,
   cleanPhoneNumber,
 } from "@/lib/validations/auth";
+
 export default function SignUpPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -71,29 +73,23 @@ export default function SignUpPage() {
         });
 
         router.push("/login");
-      } catch (error: any) {
-        const message =
-          error.response?.data?.message ||
-          "Failed to create account. Try again.";
-
-        // Check if error is about duplicate email/phone
-        if (error.response?.status === 409) {
-          if (message.toLowerCase().includes("email")) {
-            setError("email", { type: "manual", message });
-          } else if (message.toLowerCase().includes("phone")) {
-            setError("phone", { type: "manual", message });
-          } else {
-            toast.error(message);
+      } catch (error: unknown) {
+        if (error instanceof ApiError) {
+          if (error.statusCode === 409) {
+            toast.error(error.message);
+            return;
           }
-        } else {
-          toast.error(message);
+          toast.error(error.message || "Failed to create account.");
+          return;
         }
+        toast.error("Something went wrong. Please try again.");
       }
     });
   };
 
   return (
-    <div className="flex items-center justify-center py-12 px-4 bg-background">
+    // ✅ RESTORED: min-h-screen + gradient background
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gradient-to-br from-background via-background to-primary/5">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -right-1/2 w-[800px] h-[800px] rounded-full bg-amber-400/[0.03] blur-3xl" />
@@ -122,7 +118,7 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* Card */}
+        {/* ✅ RESTORED: Card with backdrop-blur and shadow */}
         <Card className="border-border/50 shadow-xl shadow-black/5 backdrop-blur-sm bg-card/95">
           <CardHeader className="space-y-1.5 pb-6">
             <CardTitle className="text-2xl font-bold text-center tracking-tight">

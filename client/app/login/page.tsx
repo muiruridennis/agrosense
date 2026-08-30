@@ -1,28 +1,44 @@
-// src/app/(auth)/login/page.tsx
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Eye, EyeOff, ArrowRight, Bird, Phone, Mail, Lock, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/providers/auth-provider';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Bird,
+  Phone,
+  Mail,
+  Lock,
+  Shield,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/providers/auth-provider";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { ApiError } from "@/lib/api/client";
 
 // ───────────────────────────────────────────────────────────────
 // Zod Schema
 // ───────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, 'Phone or email is required'),
-  password: z.string().min(1, 'Password is required'),
+  identifier: z.string().min(1, "Phone or email is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -37,7 +53,9 @@ export default function LoginPage() {
 
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
-  const [identifierType, setIdentifierType] = useState<'phone' | 'email'>('phone');
+  const [identifierType, setIdentifierType] = useState<"phone" | "email">(
+    "phone",
+  );
 
   const {
     register,
@@ -48,8 +66,8 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: '',
-      password: '',
+      identifier: "",
+      password: "",
     },
   });
 
@@ -58,37 +76,46 @@ export default function LoginPage() {
       try {
         let identifier = data.identifier.trim();
 
-        if (identifierType === 'phone') {
-          identifier = identifier.replace(/\s/g, '');
-          if (identifier.startsWith('0')) {
-            identifier = '+254' + identifier.substring(1);
+        if (identifierType === "phone") {
+          identifier = identifier.replace(/\s/g, "");
+          if (identifier.startsWith("0")) {
+            identifier = "+254" + identifier.substring(1);
           }
         }
 
         await login(identifier, data.password);
 
-        toast.success('Welcome back! 🌱', {
-          description: 'Redirecting to dashboard...',
+        toast.success("Welcome back! 🌱", {
+          description: "Redirecting to dashboard...",
         });
 
-        router.push('/dashboard');
-      } catch (error: any) {
-        if (error.response?.status === 401) {
-          setError('password', {
-            type: 'manual',
-            message: 'Invalid phone/email or password',
-          });
-          toast.error('Invalid credentials');
-        } else {
-          toast.warning(error.response?.data?.message || 'Login failed');
+        router.push("/dashboard");
+      } catch (error: unknown) {
+        if (error instanceof ApiError) {
+          if (error.statusCode === 401) {
+            setError("password", {
+              type: "manual",
+              message: "Invalid phone/email or password",
+            });
+
+            toast.error(error.message);
+          } else {
+            console.error("Login error:", error);
+            toast.error(error.message || "Login failed");
+          }
+
+          return;
         }
+
+        console.error("Login error:", error);
+        toast.error("Something went wrong. Please try again.");
       }
     });
   };
 
-  const toggleIdentifierType = (type: 'phone' | 'email') => {
+  const toggleIdentifierType = (type: "phone" | "email") => {
     setIdentifierType(type);
-    setValue('identifier', '');
+    setValue("identifier", "");
   };
 
   return (
@@ -113,7 +140,9 @@ export default function LoginPage() {
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-xl font-bold">Sign in</CardTitle>
-            <CardDescription>Use your phone or email to sign in</CardDescription>
+            <CardDescription>
+              Use your phone or email to sign in
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -122,59 +151,65 @@ export default function LoginPage() {
               <div className="flex gap-1 p-1 bg-muted/50 rounded-lg border border-border/50">
                 <button
                   type="button"
-                  onClick={() => toggleIdentifierType('phone')}
+                  onClick={() => toggleIdentifierType("phone")}
                   className={cn(
                     "flex-1 py-2.5 rounded-md text-sm font-medium transition-all",
                     "flex items-center justify-center gap-2",
-                    identifierType === 'phone'
+                    identifierType === "phone"
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                   )}
                 >
-                  <Phone className={cn(
-                    "h-4 w-4",
-                    identifierType === 'phone' 
-                      ? "text-primary-foreground" 
-                      : "text-muted-foreground"
-                  )} />
+                  <Phone
+                    className={cn(
+                      "h-4 w-4",
+                      identifierType === "phone"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   Phone
                 </button>
                 <button
                   type="button"
-                  onClick={() => toggleIdentifierType('email')}
+                  onClick={() => toggleIdentifierType("email")}
                   className={cn(
                     "flex-1 py-2.5 rounded-md text-sm font-medium transition-all",
                     "flex items-center justify-center gap-2",
-                    identifierType === 'email'
+                    identifierType === "email"
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                   )}
                 >
-                  <Mail className={cn(
-                    "h-4 w-4",
-                    identifierType === 'email' 
-                      ? "text-primary-foreground" 
-                      : "text-muted-foreground"
-                  )} />
+                  <Mail
+                    className={cn(
+                      "h-4 w-4",
+                      identifierType === "email"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   Email
                 </button>
               </div>
 
               {/* Active indicator */}
               <p className="text-xs text-muted-foreground text-center -mt-1.5">
-                {identifierType === 'phone' 
-                  ? '📱 Sign in with your phone number' 
-                  : '✉️ Sign in with your email address'}
+                {identifierType === "phone"
+                  ? "📱 Sign in with your phone number"
+                  : "✉️ Sign in with your email address"}
               </p>
 
               {/* Identifier */}
               <div className="space-y-1.5">
                 <Label htmlFor="identifier" className="text-sm font-medium">
-                  {identifierType === 'phone' ? 'Phone Number' : 'Email Address'}
+                  {identifierType === "phone"
+                    ? "Phone Number"
+                    : "Email Address"}
                 </Label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60">
-                    {identifierType === 'phone' ? (
+                    {identifierType === "phone" ? (
                       <Phone className="h-4 w-4" />
                     ) : (
                       <Mail className="h-4 w-4" />
@@ -182,18 +217,22 @@ export default function LoginPage() {
                   </div>
                   <Input
                     id="identifier"
-                    type={identifierType === 'email' ? 'email' : 'text'}
+                    type={identifierType === "email" ? "email" : "text"}
                     placeholder={
-                      identifierType === 'phone' ? '0722 000 000' : 'farmer@example.com'
+                      identifierType === "phone"
+                        ? "0722 000 000"
+                        : "farmer@example.com"
                     }
                     className="pl-9 h-11"
-                    {...register('identifier')}
+                    {...register("identifier")}
                     disabled={isPending}
                     autoFocus
                   />
                 </div>
                 {errors.identifier && (
-                  <p className="text-sm text-destructive">{errors.identifier.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.identifier.message}
+                  </p>
                 )}
               </div>
 
@@ -216,22 +255,28 @@ export default function LoginPage() {
                   </div>
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     className="pl-9 pr-10 h-11"
-                    {...register('password')}
+                    {...register("password")}
                     disabled={isPending}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(v => !v)}
+                    onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -258,8 +303,11 @@ export default function LoginPage() {
 
           <CardFooter className="flex flex-col gap-3 border-t border-border/50 pt-6">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/register" className="font-medium text-primary hover:underline">
+              Don't have an account?{" "}
+              <Link
+                href="/register"
+                className="font-medium text-primary hover:underline"
+              >
                 Start free trial
               </Link>
             </p>

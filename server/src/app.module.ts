@@ -7,6 +7,8 @@ import * as redisStore from 'cache-manager-ioredis';
 import * as Joi from 'joi';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
 import { FarmsModule } from './farms/farms.module';
@@ -97,6 +99,8 @@ import { parseRedisUrl } from './common/redis-url.util';
         JWT_VERIFICATION_TOKEN_SECRET: Joi.string().required(),
         JWT_VERIFICATION_TOKEN_EXPIRATION_TIME: Joi.number().required(),
         PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES: Joi.number(),
+        THROTTLE_LIMIT: Joi.number().default(100),
+
       }),
     }),
 
@@ -146,6 +150,19 @@ import { parseRedisUrl } from './common/redis-url.util';
           enableReadyCheck: false,
         };
       },
+      inject: [ConfigService],
+    }),
+    ThrottlerModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            // 100 requests per minute per IP by default — tune per your
+            // actual traffic patterns once you have real usage data.
+            ttl: 60000,
+            limit: config.get<number>('THROTTLE_LIMIT', 100),
+          },
+        ],
+      }),
       inject: [ConfigService],
     }),
 
@@ -199,6 +216,12 @@ import { parseRedisUrl } from './common/redis-url.util';
     SchedulerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

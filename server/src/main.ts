@@ -4,6 +4,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import dns from 'node:dns';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -23,6 +24,8 @@ async function bootstrap() {
   // recognize the connection as secure, and any `secure: true` cookies
   // (e.g. refresh tokens) silently fail to be set.
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
+    app.use(helmet());
+
 
   app.use(cookieParser());
 
