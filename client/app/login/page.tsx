@@ -1,15 +1,35 @@
+// src/app/(auth)/login/page.tsx
 'use client';
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, Leaf, Phone, Mail, Lock, User, Shield } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, ArrowRight, Bird, Phone, Mail, Lock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/providers/auth-provider';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+// ───────────────────────────────────────────────────────────────
+// Zod Schema
+// ───────────────────────────────────────────────────────────────
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'Phone or email is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+// ───────────────────────────────────────────────────────────────
+// Component
+// ───────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,61 +39,24 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [identifierType, setIdentifierType] = useState<'phone' | 'email'>('phone');
 
-  const [formData, setFormData] = useState({
-    identifier: '',
-    password: '',
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+    setValue,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      identifier: '',
+      password: '',
+    },
   });
 
-  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-
-    setFormData(prev => ({
-      ...prev,
-      [id]: value,
-    }));
-
-    if (errors[id as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [id]: undefined }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: { identifier?: string; password?: string } = {};
-
-    if (!formData.identifier.trim()) {
-      newErrors.identifier = `${identifierType === 'phone' ? 'Phone number' : 'Email'} is required`;
-    }
-
-    if (identifierType === 'phone') {
-      const phoneRegex = /^(\+254|0)[0-9]{9}$/;
-      if (formData.identifier && !phoneRegex.test(formData.identifier.replace(/\s/g, ''))) {
-        newErrors.identifier = 'Enter a valid Kenyan phone number';
-      }
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (formData.identifier && !emailRegex.test(formData.identifier)) {
-        newErrors.identifier = 'Enter a valid email address';
-      }
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
+  const onSubmit = (data: LoginFormData) => {
     startTransition(async () => {
       try {
-        let identifier = formData.identifier.trim();
+        let identifier = data.identifier.trim();
 
         if (identifierType === 'phone') {
           identifier = identifier.replace(/\s/g, '');
@@ -82,19 +65,20 @@ export default function LoginPage() {
           }
         }
 
-        await login(identifier, formData.password);
+        await login(identifier, data.password);
 
-        toast.success('Welcome back 🌱', {
+        toast.success('Welcome back! 🌱', {
           description: 'Redirecting to dashboard...',
         });
 
         router.push('/dashboard');
       } catch (error: any) {
         if (error.response?.status === 401) {
-          toast.error('Invalid phone/email or password');
-          setErrors({ password: 'Invalid credentials' });
-        } else if (error.response?.status === 403) {
-          toast.error('Account locked. Try again later.');
+          setError('password', {
+            type: 'manual',
+            message: 'Invalid phone/email or password',
+          });
+          toast.error('Invalid credentials');
         } else {
           toast.warning(error.response?.data?.message || 'Login failed');
         }
@@ -102,68 +86,86 @@ export default function LoginPage() {
     });
   };
 
+  const toggleIdentifierType = (type: 'phone' | 'email') => {
+    setIdentifierType(type);
+    setValue('identifier', '');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted/30 via-background to-muted/20 px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-background">
+      <div className="w-full max-w-[400px]">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all duration-500" />
-              <Leaf className="relative w-9 h-9 text-primary group-hover:scale-110 transition-transform duration-300" />
+          <Link href="/" className="inline-flex items-center gap-2.5 group">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 shadow-md shadow-amber-400/20">
+              <Bird className="h-5 w-5 text-[#070B14]" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">
-              Agro<span className="text-primary">Sense</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              Agro<span className="text-accent">Sense</span>
             </span>
           </Link>
           <p className="text-sm text-muted-foreground mt-2">
-            Welcome back to smarter farming
+            Welcome back to your poultry farm
           </p>
         </div>
 
-        <Card className="relative overflow-hidden shadow-2xl border-muted/50">
-          {/* Decorative top bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-
-          <CardHeader className="text-center pt-8 pb-4">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              Sign in
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Use your phone or email to sign in
-            </CardDescription>
+        {/* Card */}
+        <Card className="border-border/50 shadow-sm">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-xl font-bold">Sign in</CardTitle>
+            <CardDescription>Use your phone or email to sign in</CardDescription>
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Toggle */}
-              <div className="flex gap-1 p-1 bg-muted/50 rounded-xl">
-                {['phone', 'email'].map(type => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => {
-                      setIdentifierType(type as any);
-                      setFormData(prev => ({ ...prev, identifier: '' }));
-                      setErrors(prev => ({ ...prev, identifier: undefined }));
-                    }}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      identifierType === type
-                        ? 'bg-background text-primary shadow-sm shadow-primary/10'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      {type === 'phone' ? (
-                        <Phone className="h-4 w-4" />
-                      ) : (
-                        <Mail className="h-4 w-4" />
-                      )}
-                      {type === 'phone' ? 'Phone' : 'Email'}
-                    </span>
-                  </button>
-                ))}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Toggle — with improved visibility */}
+              <div className="flex gap-1 p-1 bg-muted/50 rounded-lg border border-border/50">
+                <button
+                  type="button"
+                  onClick={() => toggleIdentifierType('phone')}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-md text-sm font-medium transition-all",
+                    "flex items-center justify-center gap-2",
+                    identifierType === 'phone'
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Phone className={cn(
+                    "h-4 w-4",
+                    identifierType === 'phone' 
+                      ? "text-primary-foreground" 
+                      : "text-muted-foreground"
+                  )} />
+                  Phone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleIdentifierType('email')}
+                  className={cn(
+                    "flex-1 py-2.5 rounded-md text-sm font-medium transition-all",
+                    "flex items-center justify-center gap-2",
+                    identifierType === 'email'
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Mail className={cn(
+                    "h-4 w-4",
+                    identifierType === 'email' 
+                      ? "text-primary-foreground" 
+                      : "text-muted-foreground"
+                  )} />
+                  Email
+                </button>
               </div>
+
+              {/* Active indicator */}
+              <p className="text-xs text-muted-foreground text-center -mt-1.5">
+                {identifierType === 'phone' 
+                  ? '📱 Sign in with your phone number' 
+                  : '✉️ Sign in with your email address'}
+              </p>
 
               {/* Identifier */}
               <div className="space-y-1.5">
@@ -182,21 +184,16 @@ export default function LoginPage() {
                     id="identifier"
                     type={identifierType === 'email' ? 'email' : 'text'}
                     placeholder={
-                      identifierType === 'phone' 
-                        ? '0712 345 678' 
-                        : 'you@example.com'
+                      identifierType === 'phone' ? '0722 000 000' : 'farmer@example.com'
                     }
-                    className="pl-10 h-11"
-                    value={formData.identifier}
-                    onChange={handleChange}
+                    className="pl-9 h-11"
+                    {...register('identifier')}
                     disabled={isPending}
+                    autoFocus
                   />
                 </div>
                 {errors.identifier && (
-                  <p className="text-xs text-destructive flex items-center gap-1">
-                    <span className="inline-block h-1 w-1 rounded-full bg-destructive" />
-                    {errors.identifier}
-                  </p>
+                  <p className="text-sm text-destructive">{errors.identifier.message}</p>
                 )}
               </div>
 
@@ -206,6 +203,12 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-sm font-medium">
                     Password
                   </Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60">
@@ -215,44 +218,27 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
-                    className="pl-10 pr-12 h-11"
-                    value={formData.password}
-                    onChange={handleChange}
+                    className="pl-9 pr-10 h-11"
+                    {...register('password')}
                     disabled={isPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-destructive flex items-center gap-1">
-                    <span className="inline-block h-1 w-1 rounded-full bg-destructive" />
-                    {errors.password}
-                  </p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
 
-              {/* ✨ Forgot Password Link - Added Here ✨ */}
-              <div className="flex items-center justify-end">
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 hover:underline underline-offset-4"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-11 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow duration-300"
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-11 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all"
                 disabled={isPending}
               >
                 {isPending ? (
@@ -263,26 +249,22 @@ export default function LoginPage() {
                 ) : (
                   <span className="flex items-center gap-2">
                     Sign In
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </Button>
             </form>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-4 border-t pt-6">
+          <CardFooter className="flex flex-col gap-3 border-t border-border/50 pt-6">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <Link 
-                href="/signup" 
-                className="text-primary font-medium hover:underline underline-offset-4 transition-colors"
-              >
-                Sign up
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Start free trial
               </Link>
             </p>
-
             <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
-              <Shield className="h-3 w-3" />
+              <Shield className="h-3.5 w-3.5" />
               <span>Your data is encrypted and secure</span>
             </div>
           </CardFooter>

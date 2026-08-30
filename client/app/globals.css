@@ -94,6 +94,10 @@
   --color-danger-foreground: #FFFFFF;
   --color-danger-bg: #FEE2E2;
 
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+  --color-destructive-bg: #FEE2E2;
+
 
   /* ─────────────────────────────────────────────────────────────
      DOMAIN COLORS — Product Meaning
