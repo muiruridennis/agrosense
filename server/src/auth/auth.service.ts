@@ -23,6 +23,7 @@ import { PostgresErrorCode } from '../database/postgresErrorCodes.enum';
 @Injectable()
 export class AuthService {
   private readonly isProd: boolean;
+  private readonly cookieSameSite: 'lax' | 'none';
 
   constructor(
     private readonly usersService: UsersService,
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {
     this.isProd = this.configService.get<string>('NODE_ENV') === 'production';
+    this.cookieSameSite = this.isProd ? 'none' : 'lax';
   }
 
   async validateUser(identifier: string, password: string): Promise<any> {
@@ -94,7 +96,10 @@ export class AuthService {
     };
 
     const secret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
-    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRY', '15m');
+    const expiresIn = this.configService.get<string>(
+      'JWT_ACCESS_EXPIRY',
+      '15m',
+    );
 
     const token = this.jwtService.sign(payload, {
       secret,
@@ -107,7 +112,7 @@ export class AuthService {
       options: {
         httpOnly: true,
         secure: this.isProd,
-        sameSite: 'lax',
+        sameSite: this.cookieSameSite,
         path: '/',
         maxAge: this.toMs(expiresIn),
       },
@@ -123,7 +128,10 @@ export class AuthService {
     };
 
     const secret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
-    const expiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRY', '30d');
+    const expiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRY',
+      '30d',
+    );
 
     const token = this.jwtService.sign(payload, {
       secret,
@@ -137,7 +145,7 @@ export class AuthService {
       options: {
         httpOnly: true,
         secure: this.isProd,
-        sameSite: 'lax',
+        sameSite: this.cookieSameSite,
         path: '/',
         maxAge: this.toMs(expiresIn),
       },
@@ -152,7 +160,7 @@ export class AuthService {
         options: {
           httpOnly: true,
           secure: this.isProd,
-          sameSite: 'lax',
+          sameSite: this.cookieSameSite,
           path: '/',
           maxAge: 0,
         },
@@ -163,7 +171,7 @@ export class AuthService {
         options: {
           httpOnly: true,
           secure: this.isProd,
-          sameSite: 'lax',
+          sameSite: this.cookieSameSite,
           path: '/',
           maxAge: 0,
         },
@@ -201,7 +209,7 @@ export class AuthService {
   }
 
   // ── Helper functions ───────────────────────────────────────────────────────
-  
+
   private toMs(duration: string): number {
     const unit = duration.slice(-1);
     const value = parseInt(duration.slice(0, -1), 10);

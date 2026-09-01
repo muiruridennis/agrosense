@@ -1,4 +1,3 @@
-// app/auth/forgot-password/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -182,9 +181,6 @@ export default function ForgotPasswordPage() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* Success Card - Redesigned */
-/* ────────────────────────────────────────────────────────────────────────── */
 
 function SuccessCard() {
   const router = useRouter();
