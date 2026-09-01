@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(response.data);
 
-    router.replace("/dashboard");
+    // router.replace("/dashboard");
   };
 
   /**
